@@ -22,12 +22,16 @@
   "files": [
     "src",
     "examples",
-    "docs",
+    "docs/design.md",
+    "docs/research.md",
     "rescript.json",
     "README.md",
     "TYPE_FIDELITY.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": "./src/Mcp.mjs",
     "./core": "./src/core/McpCore.mjs",

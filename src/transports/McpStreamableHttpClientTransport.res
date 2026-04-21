@@ -2,11 +2,11 @@
 // Concern: bind the Streamable HTTP client transport.
 type t = McpTransport.t
 
-@module("@modelcontextprotocol/sdk/client/streamableHttp")
+@module("@modelcontextprotocol/sdk/client/streamableHttp.js")
 @new
 external make: Webapi.Url.t => t = "StreamableHTTPClientTransport"
 
-@module("@modelcontextprotocol/sdk/client/streamableHttp")
+@module("@modelcontextprotocol/sdk/client/streamableHttp.js")
 @new
 external makeWithOptions: (Webapi.Url.t, McpStreamableHttpClientTransportOptions.t) => t =
   "StreamableHTTPClientTransport"

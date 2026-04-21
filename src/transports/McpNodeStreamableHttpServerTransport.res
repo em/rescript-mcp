@@ -2,11 +2,11 @@
 // Concern: bind the Node Streamable HTTP server transport.
 type t = McpTransport.t
 
-@module("@modelcontextprotocol/sdk/server/streamableHttp")
+@module("@modelcontextprotocol/sdk/server/streamableHttp.js")
 @new
 external make: unit => t = "StreamableHTTPServerTransport"
 
-@module("@modelcontextprotocol/sdk/server/streamableHttp")
+@module("@modelcontextprotocol/sdk/server/streamableHttp.js")
 @new
 external makeWithOptions: McpNodeStreamableHttpServerTransportOptions.t => t =
   "StreamableHTTPServerTransport"

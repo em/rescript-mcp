@@ -82,6 +82,7 @@ The repository uses Vitest for runtime verification:
 - initialize and ping round-trip over stdio
 - initialize and ping round-trip over HTTP client and server transports
 - direct web-standard `Request` / `Response` verification for the web transport
+- plain Node ESM import smoke coverage for the published entrypoints
 
 Run:
 

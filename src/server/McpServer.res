@@ -2,11 +2,11 @@
 // Concern: bind the high-level @modelcontextprotocol/sdk/server/mcp McpServer class.
 type t
 
-@module("@modelcontextprotocol/sdk/server/mcp")
+@module("@modelcontextprotocol/sdk/server/mcp.js")
 @new
 external make: McpImplementation.t => t = "McpServer"
 
-@module("@modelcontextprotocol/sdk/server/mcp")
+@module("@modelcontextprotocol/sdk/server/mcp.js")
 @new
 external makeWithOptions: (McpImplementation.t, McpServerOptions.t) => t = "McpServer"
 

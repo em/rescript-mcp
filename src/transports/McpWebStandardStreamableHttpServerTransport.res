@@ -2,11 +2,11 @@
 // Concern: bind the web-standard Streamable HTTP server transport.
 type t = McpTransport.t
 
-@module("@modelcontextprotocol/sdk/server/webStandardStreamableHttp")
+@module("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js")
 @new
 external make: unit => t = "WebStandardStreamableHTTPServerTransport"
 
-@module("@modelcontextprotocol/sdk/server/webStandardStreamableHttp")
+@module("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js")
 @new
 external makeWithOptions: McpWebStandardStreamableHttpServerTransportOptions.t => t =
   "WebStandardStreamableHTTPServerTransport"
