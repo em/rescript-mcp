@@ -97,4 +97,4 @@ npm test
 - Run `npm run changeset` when a user-facing change lands.
 - The `release.yml` workflow opens or updates the release PR on `main`.
 - Merging that release PR runs `npm run release` in GitHub Actions and publishes to npm.
-- The repo needs a GitHub Actions secret named `NPM_TOKEN` with publish rights for `rescript-mcp`.
+- Publishing is configured for npm trusted publishing from GitHub Actions, so there is no npm token to rotate once the package is linked on npm.
