@@ -1,0 +1,17 @@
+module NodeStreamableHttpServerTransport: module type of McpNodeStreamableHttpServerTransport
+module NodeStreamableHttpServerTransportOptions:
+  module type of McpNodeStreamableHttpServerTransportOptions
+module StdioClientTransport: module type of McpStdioClientTransport
+module StdioServerParameters: module type of McpStdioServerParameters
+module StdioServerTransport: module type of McpStdioServerTransport
+module StreamableHttpClientTransport: module type of McpStreamableHttpClientTransport
+module StreamableHttpClientTransportOptions:
+  module type of McpStreamableHttpClientTransportOptions
+module StreamableHttpReconnectionOptions: module type of McpStreamableHttpReconnectionOptions
+module WebSocketClientTransport: module type of McpWebSocketClientTransport
+module WebStandardStreamableHttpHandleRequestOptions:
+  module type of McpWebStandardStreamableHttpHandleRequestOptions
+module WebStandardStreamableHttpServerTransport:
+  module type of McpWebStandardStreamableHttpServerTransport
+module WebStandardStreamableHttpServerTransportOptions:
+  module type of McpWebStandardStreamableHttpServerTransportOptions

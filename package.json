@@ -1,0 +1,59 @@
+{
+  "name": "rescript-mcp",
+  "version": "0.1.0",
+  "description": "ReScript bindings for the public @modelcontextprotocol/sdk",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/em/rescript-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/em/rescript-mcp/issues"
+  },
+  "homepage": "https://github.com/em/rescript-mcp",
+  "keywords": [
+    "rescript",
+    "mcp",
+    "modelcontextprotocol",
+    "bindings",
+    "sdk"
+  ],
+  "files": [
+    "src",
+    "examples",
+    "docs",
+    "rescript.json",
+    "README.md",
+    "TYPE_FIDELITY.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./src/Mcp.mjs",
+    "./core": "./src/core/McpCore.mjs",
+    "./shared": "./src/shared/McpShared.mjs",
+    "./server": "./src/server/McpServerBindings.mjs",
+    "./client": "./src/client/McpClientBindings.mjs",
+    "./transports": "./src/transports/McpTransports.mjs"
+  },
+  "scripts": {
+    "build": "rescript build",
+    "clean": "rescript clean",
+    "test": "npm run build && vitest run --environment node",
+    "test:watch": "npm run build && vitest --environment node",
+    "test:coverage": "npm run build && vitest run --environment node --coverage"
+  },
+  "dependencies": {
+    "rescript-nodejs": "^16.1.0",
+    "rescript-webapi": "^0.10.0"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "rescript": "^12.2.0",
+    "vitest": "^4.1.4"
+  }
+}

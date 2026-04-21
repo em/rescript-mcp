@@ -1,0 +1,16 @@
+// src/transports/McpTransports.res
+// Concern: group the public transport modules under one package-level namespace.
+module NodeStreamableHttpServerTransport = McpNodeStreamableHttpServerTransport
+module NodeStreamableHttpServerTransportOptions = McpNodeStreamableHttpServerTransportOptions
+module StdioClientTransport = McpStdioClientTransport
+module StdioServerParameters = McpStdioServerParameters
+module StdioServerTransport = McpStdioServerTransport
+module StreamableHttpClientTransport = McpStreamableHttpClientTransport
+module StreamableHttpClientTransportOptions = McpStreamableHttpClientTransportOptions
+module StreamableHttpReconnectionOptions = McpStreamableHttpReconnectionOptions
+module WebSocketClientTransport = McpWebSocketClientTransport
+module WebStandardStreamableHttpHandleRequestOptions =
+  McpWebStandardStreamableHttpHandleRequestOptions
+module WebStandardStreamableHttpServerTransport = McpWebStandardStreamableHttpServerTransport
+module WebStandardStreamableHttpServerTransportOptions =
+  McpWebStandardStreamableHttpServerTransportOptions
