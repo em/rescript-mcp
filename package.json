@@ -1,7 +1,7 @@
 {
   "name": "rescript-mcp",
   "version": "0.1.0",
-  "description": "ReScript bindings for the public @modelcontextprotocol/sdk",
+  "description": "ReScript bindings for the public MCP TypeScript SDK split packages",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -20,20 +20,20 @@
     "sdk"
   ],
   "files": [
-    "src",
-    "examples",
-    "docs/design.md",
-    "docs/research.md",
-    "rescript.json",
     "README.md",
-    "TYPE_FIDELITY.md",
-    "LICENSE"
+    "LICENSE",
+    "rescript.json",
+    "src/**/*.mjs",
+    "src/**/*.res",
+    "src/**/*.resi"
   ],
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": "./src/Mcp.mjs",
+    "./auth": "./src/auth/McpAuth.mjs",
+    "./protocol": "./src/protocol/McpProtocol.mjs",
     "./core": "./src/core/McpCore.mjs",
     "./shared": "./src/shared/McpShared.mjs",
     "./server": "./src/server/McpServerBindings.mjs",
@@ -44,22 +44,28 @@
     "build": "rescript build",
     "changeset": "changeset",
     "clean": "rescript clean",
-    "release": "npm publish --access public --provenance",
-    "test": "npm run build && vitest run --environment node",
-    "test:watch": "npm run build && vitest --environment node",
-    "test:coverage": "npm run build && vitest run --environment node --coverage",
+    "release": "node ./scripts/releaseLocalRefusal.mjs",
+    "release:ci": "node ./scripts/releasePublish.mjs",
+    "test": "npm run build && vitest run --environment node --coverage",
+    "test:watch": "npm run build && vitest --environment node --coverage",
     "version-packages": "changeset version && npm install --package-lock-only"
   },
   "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
+    "rescript-schema": "^9.5.1",
     "rescript-nodejs": "^16.1.0",
     "rescript-webapi": "^0.10.0"
   },
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0"
+    "@modelcontextprotocol/client": "2.0.0-alpha.2",
+    "@modelcontextprotocol/node": "2.0.0-alpha.2",
+    "@modelcontextprotocol/server": "2.0.0-alpha.2"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/client": "2.0.0-alpha.2",
+    "@modelcontextprotocol/node": "2.0.0-alpha.2",
+    "@modelcontextprotocol/server": "2.0.0-alpha.2",
     "@vitest/coverage-v8": "^4.1.4",
     "rescript": "^12.2.0",
     "vitest": "^4.1.4"

@@ -1,44 +1,44 @@
 # rescript-mcp
 
-`rescript-mcp` is a reusable ReScript binding package for the public `@modelcontextprotocol/sdk`.
+`rescript-mcp` is a reusable ReScript binding package for the public MCP TypeScript SDK packages:
 
-It is intentionally scoped to the public SDK's generic transport, client, server, and request-context surface. It does not ship application logic, OAuth discovery routes, Clerk helpers, or any statespace-specific MCP behavior.
+- `@modelcontextprotocol/client`
+- `@modelcontextprotocol/server`
+- `@modelcontextprotocol/node`
 
-Tested against:
+Current package line:
 
-- `@modelcontextprotocol/sdk@1.29.0`
+- `@modelcontextprotocol/client@2.0.0-alpha.2`
+- `@modelcontextprotocol/server@2.0.0-alpha.2`
+- `@modelcontextprotocol/node@2.0.0-alpha.2`
 - `rescript@12.2.0`
 
 ## Scope
 
-This package binds the public entrypoints needed to build and consume MCP transports from ReScript:
+This package binds the public entrypoints needed to build and consume MCP servers, clients, transports, and Standard Schema authoring from ReScript:
 
 - high-level `McpServer`
 - low-level `Server`
 - high-level `Client`
+- `McpStandardSchema` bridge from `rescript-schema`
 - web-standard Streamable HTTP server transport
 - Node Streamable HTTP server transport
 - stdio server and client transports
 - Streamable HTTP client transport
-- WebSocket client transport
 - core implementation, auth, request-info, and transport/protocol option types
 
-## Deliberate boundary
+## Maintenance Model
 
-The public SDK's high-level registration API for tools, prompts, resources, and request handlers is coupled to `zod` and `AnySchema` values. `rescript-mcp` does not fake typed schema helpers with `dict<unknown>` or blanket `Obj.magic` wrappers.
+This package is maintained with Codex-assisted binding authorship.
 
-The design boundary in this package is:
+Non-trivial public binding changes carry a written audit record, adversarial review, in-source rationale at important boundaries, and targeted soundness coverage. Material Codex-assisted commits are credited in git history with a Codex co-author trailer.
 
-- bind the real schema-independent runtime surface directly
-- expose the low-level server/client/transport lifecycle cleanly
-- document the schema seam for a future companion package or explicit interop layer
-
-The current design notes are in [docs/design.md](docs/design.md) and [docs/research.md](docs/research.md).
+The maintainer workflow is documented in [`docs/process/BINDING_PROOF_PROCESS.md`](./docs/process/BINDING_PROOF_PROCESS.md).
 
 ## Installation
 
 ```bash
-npm install rescript-mcp @modelcontextprotocol/sdk
+npm install rescript-mcp @modelcontextprotocol/client @modelcontextprotocol/server @modelcontextprotocol/node
 ```
 
 Add the package to your ReScript config:
@@ -54,7 +54,7 @@ Add the package to your ReScript config:
 - Root export: `Mcp`
 - Core: `McpImplementation`, `McpAuthInfo`, `McpRequestInfo`, `McpMessageExtraInfo`, `McpTypes`
 - Shared: `McpTransport`, `McpTransportSendOptions`, `McpProtocolOptions`, `McpRequestOptions`
-- Server: `McpServer`, `McpLowLevelServer`, `McpServerOptions`
+- Server: `McpServer`, `McpLowLevelServer`, `McpServerOptions`, `McpTool`, `McpPrompt`, `McpResource`, `McpServerContext`
 - Client: `McpClient`, `McpClientOptions`
 - Transports:
   - `McpWebStandardStreamableHttpServerTransport`
@@ -62,7 +62,6 @@ Add the package to your ReScript config:
   - `McpStdioServerTransport`
   - `McpStdioClientTransport`
   - `McpStreamableHttpClientTransport`
-  - `McpWebSocketClientTransport`
 
 ## Example
 
@@ -82,6 +81,7 @@ The repository uses Vitest for runtime verification:
 - initialize and ping round-trip over stdio
 - initialize and ping round-trip over HTTP client and server transports
 - direct web-standard `Request` / `Response` verification for the web transport
+- authoring round-trip for tools, prompts, and resources
 - plain Node ESM import smoke coverage for the published entrypoints
 
 Run:
@@ -96,5 +96,6 @@ npm test
 - Versioning is managed with Changesets.
 - Run `npm run changeset` when a user-facing change lands.
 - The `release.yml` workflow opens or updates the release PR on `main`.
-- Merging that release PR runs `npm run release` in GitHub Actions and publishes to npm.
+- Merging that release PR runs `npm run release:ci` in GitHub Actions and publishes to npm.
 - Publishing is configured for npm trusted publishing from GitHub Actions, so there is no npm token to rotate once the package is linked on npm.
+- Local shells do not publish this package. Do not run `npm publish` or `npm run release` locally.
