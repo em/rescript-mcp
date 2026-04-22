@@ -1,16 +1,12 @@
 # rescript-mcp
 
-ReScript bindings for the public MCP TypeScript SDK packages:
+ReScript bindings for the split Model Context Protocol TypeScript SDK packages:
 
 - `@modelcontextprotocol/client`
 - `@modelcontextprotocol/server`
 - `@modelcontextprotocol/node`
 
-Supported package line:
-
-- `@modelcontextprotocol/client@2.0.0-alpha.2`
-- `@modelcontextprotocol/server@2.0.0-alpha.2`
-- `@modelcontextprotocol/node@2.0.0-alpha.2`
+The bindings stay close to the upstream SDK names and transport model, so the TypeScript MCP docs remain useful when working from ReScript.
 
 ## Install
 
@@ -26,7 +22,13 @@ Add the package to `rescript.json`:
 }
 ```
 
-## Example
+Supported package line:
+
+- `@modelcontextprotocol/client@2.0.0-alpha.2`
+- `@modelcontextprotocol/server@2.0.0-alpha.2`
+- `@modelcontextprotocol/node@2.0.0-alpha.2`
+
+## Quick Start
 
 ```rescript
 let implementation = McpImplementation.make(~name="example-server", ~version="0.1.0")
@@ -39,20 +41,16 @@ let transport =
 let _promise = server->McpLowLevelServer.connect(transport)
 ```
 
-More examples:
+## Package Guide
 
-- [Basic server](https://github.com/em/rescript-mcp/blob/main/examples/BasicServer.res)
-- [Basic client](https://github.com/em/rescript-mcp/blob/main/examples/BasicClient.res)
+- `McpClient` covers client setup, connection, and request flow
+- `McpLowLevelServer` and `McpServer` cover low-level server wiring and higher-level server helpers
+- `McpTool`, `McpPrompt`, and `McpResource` cover server authoring helpers
+- `McpProtocol` and related schema modules cover protocol objects and shared transport data
+- transport modules cover stdio, Streamable HTTP, and web-standard server transports
+- grouped re-exports also live under `Mcp`
 
-## Package Layout
-
-- `McpServer`, `McpLowLevelServer`, `McpTool`, `McpPrompt`, and `McpResource` cover server authoring
-- `McpClient` covers MCP client setup and requests
-- `McpStandardSchema` bridges MCP schemas to `rescript-schema`
-- transport modules cover stdio, Streamable HTTP, and web-standard server handling
-- root grouped modules live under [`src/Mcp.resi`](./src/Mcp.resi)
-
-Published JS subpaths:
+Published package subpaths:
 
 - `rescript-mcp`
 - `rescript-mcp/auth`
@@ -63,6 +61,17 @@ Published JS subpaths:
 - `rescript-mcp/client`
 - `rescript-mcp/transports`
 
+Upstream package references:
+
+- [`@modelcontextprotocol/client`](https://www.npmjs.com/package/@modelcontextprotocol/client)
+- [`@modelcontextprotocol/server`](https://www.npmjs.com/package/@modelcontextprotocol/server)
+- [`@modelcontextprotocol/node`](https://www.npmjs.com/package/@modelcontextprotocol/node)
+
+Examples:
+
+- [Basic server](https://github.com/em/rescript-mcp/blob/main/examples/BasicServer.res)
+- [Basic client](https://github.com/em/rescript-mcp/blob/main/examples/BasicClient.res)
+
 ## Development
 
 ```sh
@@ -71,18 +80,8 @@ npm run build
 npm test
 ```
 
-`npm test` runs the repository verification suite for bindings, protocol shapes, transports, authoring helpers, and package entrypoints.
+## Release
 
-## Releases
+Releases are versioned with Changesets and published by GitHub Actions through the repository workflow:
 
-User-facing changes go through Changesets.
-
-Publishing is owned by GitHub Actions in [`.github/workflows/release.yml`](./.github/workflows/release.yml). Local shells do not publish this package.
-
-## Maintainer Docs
-
-- [Type fidelity notes](https://github.com/em/rescript-mcp/blob/main/docs/TYPE_FIDELITY.md)
-- [Binding proof process](https://github.com/em/rescript-mcp/blob/main/docs/process/BINDING_PROOF_PROCESS.md)
-- [README contract](https://github.com/em/rescript-mcp/blob/main/docs/process/README_CONTRACT.md)
-
-This repo uses Codex-assisted binding authorship. Material Codex-assisted changes are credited in git history, and non-trivial public binding changes carry written audits and review records.
+- [`.github/workflows/release.yml`](https://github.com/em/rescript-mcp/blob/main/.github/workflows/release.yml)
