@@ -1,6 +1,6 @@
 {
   "name": "rescript-mcp",
-  "version": "0.0.1-alpha.0",
+  "version": "0.0.1-alpha.1",
   "description": "ReScript bindings for the public MCP TypeScript SDK split packages",
   "license": "MIT",
   "type": "module",
