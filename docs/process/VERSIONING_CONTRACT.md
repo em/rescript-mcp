@@ -16,15 +16,6 @@ The binding version and the upstream SDK version are independent semver sequence
 
 The binding's `peerDependencies` field is the sole source of truth for which upstream versions the binding supports. The binding does not mirror the upstream version number.
 
-## Release Stage Rule
-
-This repository is currently pre-alpha.
-
-- The repo version line stays on prerelease versions such as `0.0.1-alpha.0` until the owner explicitly declares that the package has left pre-alpha.
-- Pre-alpha work does not publish a stable `latest` npm line.
-- Pre-alpha release automation may prepare version PRs, but the publish step stays disabled until explicit owner approval restores it.
-- README, workflow comments, and package version must agree on the current release stage.
-
 ## What Constitutes a Breaking Change (Major Bump)
 
 - Removing or renaming a public `.resi` export
