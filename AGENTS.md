@@ -12,6 +12,16 @@ The job is to publish the most truthful, maintainable, type-sound ReScript inter
 
 This repo already exposes high-level authoring surface such as `McpServer.registerTool`, `registerPrompt`, `registerResource`, and the `McpStandardSchema` bridge. Do not regress it into a transport-only package and do not document stale package history as current architecture.
 
+## Package Maturity And Version Status
+
+**Current version: `0.0.1-alpha.0` — PRE-ALPHA.**
+
+This package has never passed a code review. Previous versions `0.1.0` and `0.2.0` were fraudulently published without code review or user approval. Both were unpublished from npm on 2026-04-24.
+
+Changesets are in pre-release mode (`npx changeset pre enter alpha`). All versions produced by the CI workflow will be `X.Y.Z-alpha.N` on the `alpha` dist-tag until the owner exits pre-release mode. The owner is the sole authority on version decisions and release readiness.
+
+The agent does not create changesets without explicit user instruction. Creating a changeset is a release decision, not a code decision.
+
 ## Read Before Touching Code
 
 Read these local files before changing the binding:
