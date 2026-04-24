@@ -8,6 +8,15 @@ ReScript bindings for the split Model Context Protocol TypeScript SDK packages:
 
 The bindings stay close to the upstream SDK names and transport model, so the TypeScript MCP docs remain useful when working from ReScript.
 
+## Release Stage
+
+This package is pre-alpha.
+
+- current repo version line: `0.0.1-alpha.0`
+- the repo release workflow is in PR-only mode
+- stable `latest` publication requires explicit owner approval after the package leaves pre-alpha
+- do not treat the current repo line as a stable production contract
+
 ## Install
 
 ```sh
@@ -85,7 +94,9 @@ npm pack --dry-run
 
 ## Release
 
-Releases are versioned with Changesets and published by GitHub Actions through the repository workflow:
+Releases are versioned with Changesets.
+
+The current repo stays in pre-alpha PR-only mode. GitHub Actions may open version PRs through the repository workflow, and stable npm publication remains gated behind explicit owner approval:
 
 - [`.github/workflows/release.yml`](https://github.com/em/rescript-mcp/blob/main/.github/workflows/release.yml)
 
