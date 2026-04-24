@@ -44,10 +44,12 @@ let _promise = server->McpLowLevelServer.connect(transport)
 ## Package Guide
 
 - `McpClient` covers client setup, connection, and request flow
-- `McpLowLevelServer` and `McpServer` cover low-level server wiring and higher-level server helpers
-- `McpTool`, `McpPrompt`, and `McpResource` cover server authoring helpers
-- `McpProtocol` and related schema modules cover protocol objects and shared transport data
-- transport modules cover stdio, Streamable HTTP, and web-standard server transports
+- `McpLowLevelServer` and `McpServer` cover low-level server wiring and higher-level server APIs
+- `McpTool`, `McpPrompt`, `McpResource`, and `McpResourceTemplate` cover server authoring APIs
+- `Mcp.Server.ExperimentalTasks`, `Mcp.Client.ExperimentalTasks`, and `Mcp.Shared.Task*` cover the installed experimental task flow, pluggable task stores, and task queues
+- `McpProtocol` and related schema modules cover typed protocol request/result objects, `Mcp.Protocol.JsonValue`, notification params, and shared transport data
+- `Mcp.Shared.UriTemplate` exposes the upstream URI template surface used by resource templates
+- transport modules cover stdio, Streamable HTTP, SSE, and web-standard server transports
 - grouped re-exports also live under `Mcp`
 
 Published package subpaths:
@@ -78,6 +80,7 @@ Examples:
 npm install
 npm run build
 npm test
+npm pack --dry-run
 ```
 
 ## Release
@@ -85,3 +88,11 @@ npm test
 Releases are versioned with Changesets and published by GitHub Actions through the repository workflow:
 
 - [`.github/workflows/release.yml`](https://github.com/em/rescript-mcp/blob/main/.github/workflows/release.yml)
+
+## Maintainer Docs
+
+- [Type fidelity notes](https://github.com/em/rescript-mcp/blob/main/docs/TYPE_FIDELITY.md)
+- [Type soundness audit](https://github.com/em/rescript-mcp/blob/main/docs/TYPE_SOUNDNESS_AUDIT.md)
+- [Soundness matrix](https://github.com/em/rescript-mcp/blob/main/docs/SOUNDNESS_MATRIX.md)
+- [Binding proof process](https://github.com/em/rescript-mcp/blob/main/docs/process/BINDING_PROOF_PROCESS.md)
+- [README contract](https://github.com/em/rescript-mcp/blob/main/docs/process/README_CONTRACT.md)

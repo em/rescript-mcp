@@ -17,6 +17,7 @@ This repo already exposes high-level authoring surface such as `McpServer.regist
 Read these local files before changing the binding:
 
 - `README.md`
+- `docs/RELEASE_BLOCKERS.md`
 - `docs/TYPE_FIDELITY.md`
 - `docs/TYPE_SOUNDNESS_AUDIT.md`
 - `docs/process/BINDING_PROOF_PROCESS.md`
@@ -49,6 +50,7 @@ When README, docs, declarations, tests, and runtime differ, verify the runtime a
 - Keep package entrypoints and subpath exports thin and recognizable to MCP users.
 - Separate exact upstream surface from package-authored convenience layers.
 - Prefer smaller honest APIs over larger unsound ones.
+- Prefer a strict supported subset over wider unsound coverage. If a rare protocol or SDK edge case would force a weaker public type across the whole API, keep the stricter model for the supported subset and document the unsupported remainder.
 - Prefer normal ReScript interop over wrappers when the runtime contract can be bound directly.
 
 ## What Good Looks Like
@@ -59,6 +61,7 @@ When README, docs, declarations, tests, and runtime differ, verify the runtime a
 - Open protocol payloads stay open until the caller or schema boundary classifies them.
 - Transport surfaces remain important, but they do not crowd out authoring APIs.
 - Compromises are narrow, explicit, and documented in `docs/TYPE_FIDELITY.md`.
+- Unsupported or intentionally deferred upstream cases are recorded explicitly instead of being widened into public `unknown` or fake generic surface.
 
 ## ReScript Representation Rules
 
@@ -70,6 +73,7 @@ When README, docs, declarations, tests, and runtime differ, verify the runtime a
 - Use `unknown` for untrusted foreign values and caller-owned protocol payloads.
 - Do not translate broad TypeScript structure into fake closed ReScript records.
 - Do not translate schema-driven APIs into fake `'a` without runtime proof.
+- Do not weaken an otherwise well-modeled authoring surface just to cover a badly-typed or method-indexed edge case from the upstream SDK.
 
 ## MCP-Specific Boundary Rules
 
@@ -108,6 +112,7 @@ The following are fraud in this repository:
 
 Follow the detailed process docs:
 
+- `docs/RELEASE_BLOCKERS.md`
 - `docs/process/BINDING_PROOF_PROCESS.md`
 - `docs/process/VERSIONING_CONTRACT.md`
 - `docs/process/SOURCE_COMMENT_CONTRACT.md`
@@ -117,6 +122,20 @@ Follow the detailed process docs:
 - `docs/audits/PERIODIC_TEMPLATE.md`
 - `docs/process/VERSIONING_CONTRACT.md`
 - `docs/SOUNDNESS_MATRIX.md`
+
+If `docs/RELEASE_BLOCKERS.md` contains any open blocker, breadth work does not count as progress. Do not add new public surface, transport breadth, package-authored wrapper APIs, coverage-growth-only tests, or docs polish until the open blockers are closed in code and proved through direct binding evidence inside this repo.
+
+Do not recreate throwaway consumer apps, packed-tarball consumer fixtures, or external-project harnesses as the package's proof mechanism. User-reported consumer failures are bug reports to objectify into direct binding defects and repo-owned tests, not a prompt to build fake consumers inside the binding repo.
+
+ReScript-authored tests must use `rescript-vitest` as the test framework boundary. Do not replace it with a repo-owned Vitest DSL built from direct raw Vitest externals.
+
+## ReScript Build Integrity
+
+- `.res` and `.resi` files are the source of truth.
+- Tracked `.mjs` files are generated output only.
+- Never hand-edit generated `.mjs` files.
+- Do not use `rescript watch` as the agent workflow.
+- After each change, run the repo build command and read the actual build result.
 
 Do not consider binding work complete until all applicable items below are true:
 
@@ -137,4 +156,3 @@ Do not consider binding work complete until all applicable items below are true:
 - Keep `docs/SOUNDNESS_MATRIX.md` aligned with current tests and current public `.resi`.
 - Keep `docs/audits/` current for non-trivial binding changes.
 - Keep `README.md` aligned with `docs/process/README_CONTRACT.md`.
-
