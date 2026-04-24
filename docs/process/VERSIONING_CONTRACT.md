@@ -90,7 +90,19 @@ npm publication is owned by `.github/workflows/release.yml`. Only GitHub Actions
 - The workflow runs `npm run build` and `npm test` before the changesets publish step. If either fails, nothing publishes.
 - `changesets/action` creates a "Version packages" PR when pending changesets exist. Publishing happens after that PR is merged.
 - `createGithubReleases` defaults to `true` — the action automatically creates GitHub Releases with git tags (e.g., `v0.0.1-alpha.1`) after a successful publish.
-- Local `npm publish` and `npm run release` are forbidden. The agent never runs them.
+- Local `npm publish`, `npm run release`, and `npm run version-packages` are forbidden. The agent never runs them outside GitHub Actions.
+
+## Post-Publish Verification (MANDATORY)
+
+After any push that includes changesets, the agent must verify the release pipeline completed correctly. Fire-and-forget is prohibited.
+
+1. Check CI status: `gh run list --repo em/rescript-mcp -L 3`
+2. If the Release workflow ran, verify it succeeded. If it failed, read the logs with `gh run view <id> --log-failed` and fix the cause.
+3. After a successful publish, verify the npm registry reflects the new version: `npm view rescript-mcp version dist-tags --json`
+4. Verify the GitHub Release was created with the correct tag: `gh release list --repo em/rescript-mcp -L 3`
+5. If any step shows a mismatch between what was expected and what happened, investigate and fix before moving on.
+
+The agent does not assume a push resulted in a publish. The agent checks.
 
 ## Auditability
 
