@@ -13,7 +13,7 @@ Run this process for any change that does one or more of these:
 - changes a public `.resi`
 - adds or changes `unknown`, `%identity`, `Obj.magic`, `%raw`, `@unboxed`, `@tag`, or `*Raw`
 - changes a public generic, nullish boundary, error surface, or runtime class binding
-- changes helper-vs-upstream surface classification
+- changes wrapper-vs-upstream surface classification
 - changes supported upstream package version
 
 ## Artifact Map
@@ -24,12 +24,14 @@ Every non-trivial change must touch the right artifacts.
   - decision audit for the specific change
 - `docs/audits/periodic-<scope>.md`
   - periodic or release audit record
+- `docs/RELEASE_BLOCKERS.md`
+  - active blocker list that outranks breadth work until the listed blockers are closed
 - `docs/SOUNDNESS_MATRIX.md`
   - living map of important soundness boundaries and their tests
 - in-source comments in affected `.res` and `.resi`
   - local rationale at hazardous or non-obvious boundaries
 - `docs/TYPE_FIDELITY.md`
-  - documented expressivity gaps between upstream TypeScript and public ReScript
+  - documented expressivity gaps between upstream TypeScript and public ReScript, including the strict supported subset and any intentionally unsupported upstream cases
 - `docs/TYPE_SOUNDNESS_AUDIT.md`
   - current debt inventory for public `unknown`, `%identity`, `%raw`, and other boundary risks
 - `README.md`
@@ -60,13 +62,13 @@ These roles may be performed by different agents or by the same maintainer in se
 ### 1. Scope The Change
 
 - identify the exact upstream exports and declarations involved
-- identify whether the surface is exact upstream surface or package-authored helper surface
+- identify whether the surface is exact upstream surface or package-authored wrapper surface
 - identify the relevant boundary class:
   - exact binding
   - foreign input
   - foreign output
   - runtime classifier
-  - helper surface
+  - wrapper surface
 
 ### 2. Gather Upstream Evidence
 
@@ -76,58 +78,89 @@ These roles may be performed by different agents or by the same maintainer in se
 
 Capture URLs, declarations, commands, and runtime probes in the audit report.
 
-### 3. Design The Public Representation
+Before proceeding, read `docs/RELEASE_BLOCKERS.md`.
+
+- if the change touches an open blocker, the work must either close that blocker or deepen the proof around it
+- if the change does not close or advance an open blocker, it does not count as forward progress
+- do not add breadth while blocker work is still open
+
+### 3. Prove The Modeling Ceiling
+
+Before accepting any open or lossy boundary, prove what the strongest honest public model can be.
+
+- identify which upstream type parameters are semantically preserved at runtime and which are only caller convention
+- identify whether a dynamic or method-indexed surface can be split into narrower functions, overloads, or package-owned algebraic data types
+- identify whether opaque runtime classes, request-context objects, and Standard Schema values can stay opaque instead of being flattened
+- isolate the smallest irreducibly dynamic leaf instead of widening the entire surface
+- if one awkward upstream edge case would force a weaker type across an otherwise sound surface, prefer the stricter supported subset and record the unsupported remainder explicitly
+- record each affected `unknown`, JSON projection, and `%identity` site in the audit, with the stronger alternative that was considered first
+
+### 4. Design The Public Representation
 
 - decide the `.resi` shape before or alongside implementation
 - write down at least two alternatives when the choice is non-obvious
-- explain why rejected alternatives are less truthful, less maintainable, or less sound
+- explain why rejected alternatives are less truthful, less maintainable, less sound, or falsely precise
 
-### 4. Implement
+### 5. Implement
 
 - use normal ReScript interop features first
 - add or update in-source rationale comments where required
 - keep the top-level export map thin
 
-### 5. Capture Evidence
+### 6. Capture Evidence
 
-- run `npm run build`
+- run `npm run clean && npm run build`
 - run `npm test` when binding code changed
 - run `npm pack --dry-run` for release-facing work
+- add or update direct repo-owned tests whenever the change touches:
+  - package-authored wrapper surfaces
+  - public `unknown` inputs or outputs
+  - public `*Raw` entrypoints that ordinary users are expected to use
+  - schema or result bridges
+- when a public claim depends on compile-time rejection, express that through repo-owned type-shape test modules or compile-step fixtures inside this repo, not by recreating throwaway consumer apps
+- ReScript-authored Vitest tests must be expressed through `rescript-vitest`, not a repo-owned replacement test DSL built from direct raw Vitest externals
 - inspect emitted JS for representative tricky externals when claiming low-level or zero-cost interop
 - record exact evidence in the audit report
 
-### 6. Run Adversarial Audit
+### 7. Run Adversarial Audit
 
 The adversarial pass must actively try to disprove the design.
 
 It must ask questions like:
 
+- could this `unknown`, JSON projection, or `%identity` site be replaced by a tighter exact model
 - is this really a closed type
 - is this really polymorphism
 - does the runtime actually preserve the generic parameter
+- did the binding preserve the strongest sound authoring surface, or weaken it to chase wider protocol coverage
 - are null, undefined, and omission separated correctly
 - is the public `*Raw` API actually justified
 - is this `%identity` a proved representational equality
 - does the typed wrapper preserve upstream semantics
 - could the API be split into narrower truthful pieces
 - does the current documentation match the actual current public surface
+- can the public binding surface itself be exercised in this repo without package-local `%identity` support casts standing in for the real call shape
 
-### 7. Fix Or Reject
+### 8. Fix Or Reject
 
 - fix the binding if the adversarial pass finds a problem
 - tighten or document any remaining open boundary
 - reject the change if the surface cannot yet be represented honestly
 
-### 8. Release Gate Review
+### 9. Release Gate Review
 
 Before considering the work complete, verify:
 
+- `docs/RELEASE_BLOCKERS.md` does not still list the affected blocker as open
 - code, docs, and audit artifacts all agree
 - the soundness matrix covers the affected boundary
 - `docs/TYPE_FIDELITY.md` and `docs/TYPE_SOUNDNESS_AUDIT.md` are current
+- every accepted `unknown`, JSON projection, or `%identity` site has a written reason why tighter modeling or real polymorphism was not truthful
+- every unsupported upstream case is named explicitly, together with the stricter supported subset the package chose instead of widening the full surface
 - `README.md`, `.changeset/README.md`, `package.json`, and `.github/workflows/release.yml` agree on the release path
 - the repository does not imply local `npm publish` as part of the maintainer workflow
 - release publication is delegated to the repo's GitHub Actions workflow, not a local shell
+- any required direct binding proof is recorded in `docs/audits/`
 
 ## Retrofit Rule
 
@@ -152,6 +185,7 @@ Use stable descriptive names. Do not bury audit history in vague filenames.
 A non-trivial binding change is incomplete until:
 
 - the required artifacts exist
+- `docs/RELEASE_BLOCKERS.md` was read and any affected blocker was updated
 - the evidence chain is reproducible
 - the adversarial pass has a written verdict
 - the soundness matrix was updated
