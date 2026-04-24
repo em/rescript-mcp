@@ -45,8 +45,8 @@
     "verify:generated": "npm run build && git diff --exit-code -- ':(glob)src/**/*.mjs' ':(glob)tests/**/*.mjs'",
     "changeset": "changeset",
     "clean": "rescript clean",
-    "release": "node ./scripts/releaseLocalRefusal.mjs",
-    "release:ci": "node ./scripts/releasePublish.mjs",
+    "release": "echo 'Local publishing disabled. GitHub Actions handles releases from main.' && exit 1",
+    "release:ci": "npm publish --access public --provenance --tag \"$(node -p \"require('./package.json').version.match(/-([a-z]+)/)?.[1] || 'latest'\"  )\"",
     "test": "npm run build && vitest run --environment node --coverage",
     "test:watch": "npm run build && vitest --environment node --coverage",
     "version-packages": "changeset version && npm install --package-lock-only"
