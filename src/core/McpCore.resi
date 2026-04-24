@@ -1,6 +1,7 @@
-module AuthInfo: module type of McpAuthInfo
-module Implementation: module type of McpImplementation
-module MessageExtraInfo: module type of McpMessageExtraInfo
-module RequestHandlerExtra: module type of McpRequestHandlerExtra
-module RequestInfo: module type of McpRequestInfo
-module Types: module type of McpTypes
+module AuthInfo = McpAuthInfo
+module Implementation = McpImplementation
+module MessageExtraInfo = McpMessageExtraInfo
+module ProtocolVersion = McpProtocolVersion
+module RequestHandlerExtra = McpRequestHandlerExtra
+module RequestInfo = McpRequestInfo
+module Types = McpTypes

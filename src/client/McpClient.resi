@@ -2,46 +2,68 @@ type t
 
 let make: McpImplementation.t => t
 let makeWithOptions: (McpImplementation.t, McpClientOptions.t) => t
+let experimentalTasks: t => McpClientExperimentalTasks.t
+let registerCapabilities: (t, dict<unknown>) => unit
+let setRequestHandlerRaw: (t, McpMethod.request, @uncurry (unknown, unknown) => promise<unknown>) => unit
+let setNotificationHandlerRaw: (t, McpMethod.notification, @uncurry unknown => promise<unit>) => unit
+let removeNotificationHandlerRaw: (t, McpMethod.notification) => unit
 let connect: (t, McpTransport.t) => promise<unit>
 let connectWithOptions: (t, McpTransport.t, McpRequestOptions.t) => promise<unit>
 let close: t => promise<unit>
-let ping: t => promise<unknown>
-let pingWithOptions: (t, McpRequestOptions.t) => promise<unknown>
+let ping: t => promise<McpEmptyResult.t>
+let pingWithOptions: (t, McpRequestOptions.t) => promise<McpEmptyResult.t>
 let getServerCapabilities: t => option<dict<unknown>>
 let getServerVersion: t => option<McpImplementation.t>
+let getNegotiatedProtocolVersion: t => option<McpProtocolVersion.t>
 let getInstructions: t => option<string>
-let complete: (t, dict<unknown>) => promise<unknown>
-let completeWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
-let setLoggingLevel: (t, string) => promise<unknown>
-let setLoggingLevelWithOptions: (t, string, McpRequestOptions.t) => promise<unknown>
-let getPrompt: (t, dict<unknown>) => promise<unknown>
-let getPromptWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
-let listPrompts: t => promise<unknown>
-let listPromptsWithParamsAndOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
-let listResources: t => promise<unknown>
-let listResourcesWithParamsAndOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<
-  unknown,
+let complete: (t, McpCompleteParams.t) => promise<McpCompleteResult.t>
+let completeWithOptions: (t, McpCompleteParams.t, McpRequestOptions.t) => promise<McpCompleteResult.t>
+let setLoggingLevel: (t, McpLoggingMessageParams.level) => promise<McpEmptyResult.t>
+let setLoggingLevelWithOptions: (t, McpLoggingMessageParams.level, McpRequestOptions.t) => promise<
+  McpEmptyResult.t,
 >
-let listResourceTemplates: t => promise<unknown>
+let getPrompt: (t, McpGetPromptParams.t) => promise<McpGetPromptResult.t>
+let getPromptWithOptions: (t, McpGetPromptParams.t, McpRequestOptions.t) => promise<McpGetPromptResult.t>
+let listPrompts: t => promise<McpListPromptsResult.t>
+let listPromptsWithParamsAndOptions: (t, McpPaginatedParams.t, McpRequestOptions.t) => promise<
+  McpListPromptsResult.t,
+>
+let listResources: t => promise<McpListResourcesResult.t>
+let listResourcesWithParamsAndOptions: (t, McpPaginatedParams.t, McpRequestOptions.t) => promise<
+  McpListResourcesResult.t,
+>
+let listResourceTemplates: t => promise<McpListResourceTemplatesResult.t>
 let listResourceTemplatesWithParamsAndOptions: (
   t,
-  dict<unknown>,
+  McpPaginatedParams.t,
   McpRequestOptions.t,
-) => promise<unknown>
-let readResource: (t, dict<unknown>) => promise<unknown>
-let readResourceWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
-let subscribeResource: (t, dict<unknown>) => promise<unknown>
-let subscribeResourceWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
-let unsubscribeResource: (t, dict<unknown>) => promise<unknown>
-let unsubscribeResourceWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
-let callToolRaw: (t, dict<unknown>) => promise<unknown>
-let callToolRawWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
-let callToolWithResultSchemaRaw: (t, dict<unknown>, unknown) => promise<unknown>
-let callToolWithResultSchemaRawAndOptions: (
+) => promise<McpListResourceTemplatesResult.t>
+let readResource: (t, McpResourceRequestParams.t) => promise<McpReadResourceResult.t>
+let readResourceWithOptions: (t, McpResourceRequestParams.t, McpRequestOptions.t) => promise<
+  McpReadResourceResult.t,
+>
+let subscribeResource: (t, McpResourceRequestParams.t) => promise<McpEmptyResult.t>
+let subscribeResourceWithOptions: (t, McpResourceRequestParams.t, McpRequestOptions.t) => promise<
+  McpEmptyResult.t,
+>
+let unsubscribeResource: (t, McpResourceRequestParams.t) => promise<McpEmptyResult.t>
+let unsubscribeResourceWithOptions: (
   t,
-  dict<unknown>,
-  unknown,
+  McpResourceRequestParams.t,
   McpRequestOptions.t,
-) => promise<unknown>
-let listTools: t => promise<unknown>
-let listToolsWithParamsAndOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
+) => promise<McpEmptyResult.t>
+let callTool: (t, McpCallToolParams.t, McpStandardSchema.t<'output>) => promise<McpCallToolResult.t<'output>>
+let callToolWithOptions: (
+  t,
+  McpCallToolParams.t,
+  McpStandardSchema.t<'output>,
+  McpRequestOptions.t,
+) => promise<McpCallToolResult.t<'output>>
+let callToolRaw: (t, McpCallToolParams.t) => promise<McpCallToolResult.raw>
+let callToolRawWithOptions: (t, McpCallToolParams.t, McpRequestOptions.t) => promise<
+  McpCallToolResult.raw,
+>
+let listTools: t => promise<McpListToolsResult.t>
+let listToolsWithParamsAndOptions: (t, McpPaginatedParams.t, McpRequestOptions.t) => promise<
+  McpListToolsResult.t,
+>

@@ -2,15 +2,15 @@
 // Concern: bind the stdio client transport.
 type t = McpTransport.t
 
-@module("@modelcontextprotocol/sdk/client/stdio.js")
+@module("@modelcontextprotocol/client")
 @new
 external make: McpStdioServerParameters.t => t = "StdioClientTransport"
 
-@module("@modelcontextprotocol/sdk/client/stdio.js")
+@module("@modelcontextprotocol/client")
 @val
 external defaultInheritedEnvVars: array<string> = "DEFAULT_INHERITED_ENV_VARS"
 
-@module("@modelcontextprotocol/sdk/client/stdio.js")
+@module("@modelcontextprotocol/client")
 external getDefaultEnvironment: unit => dict<string> = "getDefaultEnvironment"
 
 @return(nullable)

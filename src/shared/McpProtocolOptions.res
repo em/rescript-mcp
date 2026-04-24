@@ -3,12 +3,16 @@
 type t
 
 @obj
-external make: (
+external makeRaw: (
+  ~supportedProtocolVersions: array<string>=?,
   ~enforceStrictCapabilities: bool=?,
   ~debouncedNotificationMethods: array<string>=?,
-  ~taskStore: unknown=?,
-  ~taskMessageQueue: unknown=?,
-  ~defaultTaskPollInterval: int=?,
-  ~maxTaskQueueSize: int=?,
+  ~tasks: McpTaskManagerOptions.t=?,
   (),
 ) => t = ""
+
+let make = (~supportedProtocolVersions=?, ~enforceStrictCapabilities=?, ~debouncedNotificationMethods=?, ~tasks=?, ()) => {
+  let supportedProtocolVersions =
+    supportedProtocolVersions->Option.map(versions => versions->Array.map(McpProtocolVersion.toString))
+  makeRaw(~supportedProtocolVersions?, ~enforceStrictCapabilities?, ~debouncedNotificationMethods?, ~tasks?, ())
+}

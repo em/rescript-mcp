@@ -9,7 +9,7 @@ let implementation = McpImplementation.make("example-server", "0.1.0");
 
 let server = McpLowLevelServer.make(implementation);
 
-let transport = McpWebStandardStreamableHttpServerTransport.makeWithOptions(McpWebStandardStreamableHttpServerTransportOptions.make(undefined, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined));
+let transport = McpWebStandardStreamableHttpServerTransport.makeWithOptions(McpWebStandardStreamableHttpServerTransportOptions.make(undefined, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
 
 let _promise = McpLowLevelServer.connect(server, transport);
 

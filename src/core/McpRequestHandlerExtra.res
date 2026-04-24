@@ -11,7 +11,7 @@ external authInfo: t => option<McpAuthInfo.t> = "authInfo"
 external sessionId: t => option<string> = "sessionId"
 
 @get
-external requestId: t => unknown = "requestId"
+external requestId: t => McpTypes.requestId = "requestId"
 
 @return(nullable)
 @get

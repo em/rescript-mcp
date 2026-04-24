@@ -1,11 +1,9 @@
 type t
 
 let make: (
+  ~supportedProtocolVersions: array<McpProtocolVersion.t>=?,
   ~enforceStrictCapabilities: bool=?,
   ~debouncedNotificationMethods: array<string>=?,
-  ~taskStore: unknown=?,
-  ~taskMessageQueue: unknown=?,
-  ~defaultTaskPollInterval: int=?,
-  ~maxTaskQueueSize: int=?,
+  ~tasks: McpTaskManagerOptions.t=?,
   unit,
 ) => t

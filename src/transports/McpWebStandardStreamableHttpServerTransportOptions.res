@@ -3,7 +3,7 @@
 type t
 
 @obj
-external make: (
+external makeRaw: (
   ~sessionIdGenerator: (unit => string)=?,
   ~onsessioninitialized: (string => unit)=?,
   ~onsessionclosed: (string => unit)=?,
@@ -13,5 +13,12 @@ external make: (
   ~allowedOrigins: array<string>=?,
   ~enableDnsRebindingProtection: bool=?,
   ~retryInterval: int=?,
+  ~supportedProtocolVersions: array<string>=?,
   (),
 ) => t = ""
+
+let make = (~sessionIdGenerator=?, ~onsessioninitialized=?, ~onsessionclosed=?, ~enableJsonResponse=?, ~eventStore=?, ~allowedHosts=?, ~allowedOrigins=?, ~enableDnsRebindingProtection=?, ~retryInterval=?, ~supportedProtocolVersions=?, ()) => {
+  let supportedProtocolVersions =
+    supportedProtocolVersions->Option.map(versions => versions->Array.map(McpProtocolVersion.toString))
+  makeRaw(~sessionIdGenerator?, ~onsessioninitialized?, ~onsessionclosed?, ~enableJsonResponse?, ~eventStore?, ~allowedHosts?, ~allowedOrigins?, ~enableDnsRebindingProtection?, ~retryInterval?, ~supportedProtocolVersions?, ())
+}

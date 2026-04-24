@@ -1,2 +1,3 @@
-module Client: module type of McpClient
-module ClientOptions: module type of McpClientOptions
+module Client = McpClient
+module ClientOptions = McpClientOptions
+module ExperimentalTasks = McpClientExperimentalTasks

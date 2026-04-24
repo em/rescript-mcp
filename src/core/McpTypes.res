@@ -5,27 +5,27 @@ type requestId
 type clientCapabilities
 type serverCapabilities
 
-@module("@modelcontextprotocol/sdk/types.js")
+@module("@modelcontextprotocol/server")
 @val
-external latestProtocolVersion: string = "LATEST_PROTOCOL_VERSION"
+external latestProtocolVersionRaw: string = "LATEST_PROTOCOL_VERSION"
 
-@module("@modelcontextprotocol/sdk/types.js")
+@module("@modelcontextprotocol/server")
 @val
-external defaultNegotiatedProtocolVersion: string = "DEFAULT_NEGOTIATED_PROTOCOL_VERSION"
+external defaultNegotiatedProtocolVersionRaw: string = "DEFAULT_NEGOTIATED_PROTOCOL_VERSION"
 
-@module("@modelcontextprotocol/sdk/types.js")
+@module("@modelcontextprotocol/server")
 @val
-external supportedProtocolVersions: array<string> = "SUPPORTED_PROTOCOL_VERSIONS"
+external supportedProtocolVersionsRaw: array<string> = "SUPPORTED_PROTOCOL_VERSIONS"
 
-@module("@modelcontextprotocol/sdk/types.js")
+let latestProtocolVersion = latestProtocolVersionRaw->McpProtocolVersion.fromString
+let defaultNegotiatedProtocolVersion = defaultNegotiatedProtocolVersionRaw->McpProtocolVersion.fromString
+let supportedProtocolVersions =
+  supportedProtocolVersionsRaw->Array.map(McpProtocolVersion.fromString)
+
+@module("@modelcontextprotocol/server")
 @val
 external relatedTaskMetaKey: string = "RELATED_TASK_META_KEY"
 
-@module("@modelcontextprotocol/sdk/types.js")
+@module("@modelcontextprotocol/server")
 @val
 external jsonRpcVersion: string = "JSONRPC_VERSION"
-
-external jsonRpcMessageFromUnknown: unknown => jsonRpcMessage = "%identity"
-external jsonRpcMessageToUnknown: jsonRpcMessage => unknown = "%identity"
-external requestIdFromUnknown: unknown => requestId = "%identity"
-external requestIdToUnknown: requestId => unknown = "%identity"

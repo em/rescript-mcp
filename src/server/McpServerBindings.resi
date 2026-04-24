@@ -1,3 +1,11 @@
-module LowLevelServer: module type of McpLowLevelServer
-module Server: module type of McpServer
-module ServerOptions: module type of McpServerOptions
+module Context = McpServerContext
+module ExperimentalTasks = McpServerExperimentalTasks
+module LowLevelServer = McpLowLevelServer
+module LowLevelServerExperimentalTasks = McpLowLevelServerExperimentalTasks
+module Prompt = McpPrompt
+module Resource = McpResource
+module ResourceTemplate = McpResourceTemplate
+module Server = McpServer
+module ServerOptions = McpServerOptions
+module TaskTool = McpTaskTool
+module Tool = McpTool

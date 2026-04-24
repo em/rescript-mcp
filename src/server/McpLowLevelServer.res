@@ -1,14 +1,23 @@
 // src/server/McpLowLevelServer.res
-// Concern: bind the low-level @modelcontextprotocol/sdk/server Server class.
+// Concern: bind the low-level @modelcontextprotocol/server Server class.
 type t
+type experimental
 
-@module("@modelcontextprotocol/sdk/server")
+@module("@modelcontextprotocol/server")
 @new
 external make: McpImplementation.t => t = "Server"
 
-@module("@modelcontextprotocol/sdk/server")
+@module("@modelcontextprotocol/server")
 @new
 external makeWithOptions: (McpImplementation.t, McpServerOptions.t) => t = "Server"
+
+@get
+external experimentalRaw: t => experimental = "experimental"
+
+@get
+external experimentalTasksRaw: experimental => McpLowLevelServerExperimentalTasks.t = "tasks"
+
+let experimentalTasks = server => server->experimentalRaw->experimentalTasksRaw
 
 @send
 external connect: (t, McpTransport.t) => promise<unit> = "connect"
@@ -17,10 +26,13 @@ external connect: (t, McpTransport.t) => promise<unit> = "connect"
 external close: t => promise<unit> = "close"
 
 @send
-external ping: t => promise<unknown> = "ping"
+external ping: t => promise<McpEmptyResult.t> = "ping"
 
 @send
 external registerCapabilities: (t, dict<unknown>) => unit = "registerCapabilities"
+
+@send
+external getCapabilities: t => dict<unknown> = "getCapabilities"
 
 @return(nullable)
 @send
@@ -31,14 +43,14 @@ external getClientCapabilities: t => option<dict<unknown>> = "getClientCapabilit
 external getClientVersion: t => option<McpImplementation.t> = "getClientVersion"
 
 @send
-external sendLoggingMessage: (t, dict<unknown>) => promise<unit> = "sendLoggingMessage"
+external sendLoggingMessage: (t, McpLoggingMessageParams.t) => promise<unit> = "sendLoggingMessage"
 
 @send
-external sendLoggingMessageWithSessionId: (t, dict<unknown>, string) => promise<unit> =
+external sendLoggingMessageWithSessionId: (t, McpLoggingMessageParams.t, string) => promise<unit> =
   "sendLoggingMessage"
 
 @send
-external sendResourceUpdated: (t, dict<unknown>) => promise<unit> = "sendResourceUpdated"
+external sendResourceUpdated: (t, McpResourceUpdatedParams.t) => promise<unit> = "sendResourceUpdated"
 
 @send
 external sendResourceListChanged: t => promise<unit> = "sendResourceListChanged"
@@ -50,8 +62,33 @@ external sendToolListChanged: t => promise<unit> = "sendToolListChanged"
 external sendPromptListChanged: t => promise<unit> = "sendPromptListChanged"
 
 @send
-external setRequestHandlerRaw: (
+external createMessageRaw: (t, dict<unknown>) => promise<unknown> = "createMessage"
+
+@send
+external createMessageRawWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown> =
+  "createMessage"
+
+@send
+external elicitInputRaw: (t, dict<unknown>) => promise<unknown> = "elicitInput"
+
+@send
+external elicitInputRawWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown> =
+  "elicitInput"
+
+@send
+external listRoots: t => promise<McpListRootsResult.t> = "listRoots"
+
+@send
+external listRootsWithParamsAndOptions: (t, McpListRootsParams.t, McpRequestOptions.t) => promise<
+  McpListRootsResult.t,
+> = "listRoots"
+
+@send
+external setRequestHandlerWithMethodRaw: (
   t,
-  unknown,
+  string,
   @uncurry (unknown, McpRequestHandlerExtra.t) => promise<unknown>,
 ) => unit = "setRequestHandler"
+
+let setRequestHandlerRaw = (server, method_, handler) =>
+  server->setRequestHandlerWithMethodRaw(method_->McpMethod.requestToString, handler)

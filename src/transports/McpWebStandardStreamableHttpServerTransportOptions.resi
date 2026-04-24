@@ -10,5 +10,6 @@ let make: (
   ~allowedOrigins: array<string>=?,
   ~enableDnsRebindingProtection: bool=?,
   ~retryInterval: int=?,
+  ~supportedProtocolVersions: array<McpProtocolVersion.t>=?,
   unit,
 ) => t

@@ -5,7 +5,7 @@ import * as Primitive_option from "@rescript/runtime/lib/es6/Primitive_option.js
 function make(prim0, prim1, prim2, prim3, prim4) {
   let tmp = {};
   if (prim0 !== undefined) {
-    tmp.requestInfo = Primitive_option.valFromOption(prim0);
+    tmp.request = Primitive_option.valFromOption(prim0);
   }
   if (prim1 !== undefined) {
     tmp.authInfo = Primitive_option.valFromOption(prim1);
@@ -19,8 +19,8 @@ function make(prim0, prim1, prim2, prim3, prim4) {
   return tmp;
 }
 
-function requestInfo(prim) {
-  return Primitive_option.fromNullable(prim.requestInfo);
+function request(prim) {
+  return Primitive_option.fromNullable(prim.request);
 }
 
 function authInfo(prim) {
@@ -37,7 +37,7 @@ function closeStandaloneSSEStream(prim) {
 
 export {
   make,
-  requestInfo,
+  request,
   authInfo,
   closeSSEStream,
   closeStandaloneSSEStream,

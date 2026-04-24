@@ -4,7 +4,7 @@ type t
 
 @obj
 external make: (
-  ~requestInfo: McpRequestInfo.t=?,
+  ~request: Webapi.Fetch.Request.t=?,
   ~authInfo: McpAuthInfo.t=?,
   ~closeSSEStream: (unit => unit)=?,
   ~closeStandaloneSSEStream: (unit => unit)=?,
@@ -13,7 +13,7 @@ external make: (
 
 @return(nullable)
 @get
-external requestInfo: t => option<McpRequestInfo.t> = "requestInfo"
+external request: t => option<Webapi.Fetch.Request.t> = "request"
 
 @return(nullable)
 @get

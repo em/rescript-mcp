@@ -42,6 +42,7 @@
   },
   "scripts": {
     "build": "rescript build",
+    "verify:generated": "npm run build && git diff --exit-code -- ':(glob)src/**/*.mjs' ':(glob)tests/**/*.mjs'",
     "changeset": "changeset",
     "clean": "rescript clean",
     "release": "node ./scripts/releaseLocalRefusal.mjs",
@@ -52,8 +53,8 @@
   },
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",
-    "rescript-schema": "^9.5.1",
     "rescript-nodejs": "^16.1.0",
+    "rescript-schema": "^9.5.1",
     "rescript-webapi": "^0.10.0"
   },
   "peerDependencies": {
@@ -66,8 +67,10 @@
     "@modelcontextprotocol/client": "2.0.0-alpha.2",
     "@modelcontextprotocol/node": "2.0.0-alpha.2",
     "@modelcontextprotocol/server": "2.0.0-alpha.2",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^3.1.4",
     "rescript": "^12.2.0",
-    "vitest": "^4.1.4"
+    "rescript-schema-ppx": "^9.0.1",
+    "rescript-vitest": "^2.1.1",
+    "vitest": "^3.1.4"
   }
 }

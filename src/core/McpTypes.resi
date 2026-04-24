@@ -3,12 +3,8 @@ type requestId
 type clientCapabilities
 type serverCapabilities
 
-let latestProtocolVersion: string
-let defaultNegotiatedProtocolVersion: string
-let supportedProtocolVersions: array<string>
+let latestProtocolVersion: McpProtocolVersion.t
+let defaultNegotiatedProtocolVersion: McpProtocolVersion.t
+let supportedProtocolVersions: array<McpProtocolVersion.t>
 let relatedTaskMetaKey: string
 let jsonRpcVersion: string
-let jsonRpcMessageFromUnknown: unknown => jsonRpcMessage
-let jsonRpcMessageToUnknown: jsonRpcMessage => unknown
-let requestIdFromUnknown: unknown => requestId
-let requestIdToUnknown: requestId => unknown
