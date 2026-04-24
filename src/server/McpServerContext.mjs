@@ -57,11 +57,35 @@ function elicitInputRawWithOptions(context, params, options) {
   return context.mcpReq.elicitInput(params, options);
 }
 
+function elicitFormInput(context, params) {
+  return context.mcpReq.elicitInput(params);
+}
+
+function elicitFormInputWithOptions(context, params, options) {
+  return context.mcpReq.elicitInput(params, options);
+}
+
+function elicitUrlInput(context, params) {
+  return context.mcpReq.elicitInput(params);
+}
+
+function elicitUrlInputWithOptions(context, params, options) {
+  return context.mcpReq.elicitInput(params, options);
+}
+
 function requestSamplingRaw(context, params) {
   return context.mcpReq.requestSampling(params);
 }
 
 function requestSamplingRawWithOptions(context, params, options) {
+  return context.mcpReq.requestSampling(params, options);
+}
+
+function requestSampling(context, params) {
+  return context.mcpReq.requestSampling(params);
+}
+
+function requestSamplingWithOptions(context, params, options) {
   return context.mcpReq.requestSampling(params, options);
 }
 
@@ -101,8 +125,14 @@ export {
   sendRelatedNotificationRaw,
   log,
   logWithLogger,
+  elicitFormInput,
+  elicitFormInputWithOptions,
+  elicitUrlInput,
+  elicitUrlInputWithOptions,
   elicitInputRaw,
   elicitInputRawWithOptions,
+  requestSampling,
+  requestSamplingWithOptions,
   requestSamplingRaw,
   requestSamplingRawWithOptions,
   httpAuthInfo,

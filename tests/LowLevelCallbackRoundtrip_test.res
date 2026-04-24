@@ -1,13 +1,9 @@
 open Vitest
 
-@get external samplingModel: unknown => string = "model"
-@get external samplingRole: unknown => string = "role"
-@get external samplingContent: unknown => unknown = "content"
-@get external textContentText: unknown => string = "text"
 @get external notificationParams: unknown => dict<unknown> = "params"
 
-@get external elicitationAction: unknown => string = "action"
-@return(nullable) @get external elicitationContent: unknown => option<dict<unknown>> = "content"
+@schema
+type codeForm = {code: string}
 
 let notificationStringField = (notification, fieldName) =>
   notification->notificationParams->Dict.get(fieldName)->Option.map(McpTestBindings.unknownToString)
@@ -61,12 +57,13 @@ describe("low-level client callback roundtrip", () => {
       #samplingCreateMessage,
       (_request, _ctx) =>
         Promise.resolve(
-          Dict.fromArray([
-            ("model", "test-model"->McpTestBindings.stringToUnknown),
-            ("role", "assistant"->McpTestBindings.stringToUnknown),
-            ("content", McpTestBindings.makeTextContent("sampled text")),
-          ])
-          ->McpTestBindings.dictToUnknown,
+          McpCreateMessageResult.make(
+            ~model="test-model",
+            ~role=#assistant,
+            ~content=McpSamplingContent.text("sampled text"),
+            (),
+          )
+          ->McpTestBindings.toUnknown,
         ),
     )
 
@@ -74,15 +71,12 @@ describe("low-level client callback roundtrip", () => {
       #elicitationCreate,
       (_request, _ctx) =>
         Promise.resolve(
-          Dict.fromArray([
-            ("action", "accept"->McpTestBindings.stringToUnknown),
-            (
-              "content",
-              Dict.fromArray([("code", "1234"->McpTestBindings.stringToUnknown)])
-              ->McpTestBindings.dictToUnknown,
-            ),
-          ])
-          ->McpTestBindings.dictToUnknown,
+          McpElicitResult.make(
+            ~action=#accept,
+            ~content=Dict.fromArray([("code", "1234"->McpTestBindings.stringToUnknown)]),
+            (),
+          )
+          ->McpTestBindings.toUnknown,
         ),
     )
 
@@ -156,12 +150,20 @@ describe("low-level client callback roundtrip", () => {
         ),
       )
     let samplingResult =
-      await server->McpTestBindings.createSamplingMessageRaw(
-        McpTestBindings.makeSamplingRequestParams(~text="hello server", ~maxTokens=64),
+      await server->McpLowLevelServer.createMessage(
+        McpCreateMessageParams.make(
+          ~messages=[McpSamplingMessage.text(~role=#user, ~text="hello server")],
+          ~maxTokens=64,
+          (),
+        ),
       )
     let elicitationResult =
-      await server->McpTestBindings.elicitInputRaw(
-        McpTestBindings.makeCodeElicitationRequestParams("Provide a code"),
+      await server->McpLowLevelServer.elicitFormInput(
+        McpElicitRequestFormParams.make(
+          ~message="Provide a code",
+          ~requestedSchema=codeFormSchema->McpStandardSchema.jsonSchemaOfRescriptSchema->McpTestBindings.toDict,
+          (),
+        ),
       )
     let rootsResult = await server->McpTestBindings.listRootsRaw
 
@@ -170,12 +172,12 @@ describe("low-level client callback roundtrip", () => {
       server->McpLowLevelServer.getClientCapabilities != None,
       pingResult->McpEmptyResult.meta,
       completionResult->McpCompleteResult.completion->McpCompleteResult.values,
-      samplingResult->samplingModel,
-      samplingResult->samplingRole,
-      samplingResult->samplingContent->textContentText,
-      elicitationResult->elicitationAction,
+      samplingResult->McpCreateMessageResult.model,
+      samplingResult->McpCreateMessageResult.role,
+      samplingResult->McpCreateMessageResult.content->McpSamplingContent.textValue,
+      elicitationResult->McpElicitResult.action,
       elicitationResult
-      ->elicitationContent
+      ->McpElicitResult.content
       ->Option.flatMap(content => content->Dict.get("code")->Option.map(McpTestBindings.unknownToString)),
       loggingNotifications.contents,
       updatedResources.contents,
@@ -190,9 +192,9 @@ describe("low-level client callback roundtrip", () => {
       None,
       ["alpha", "beta"],
       "test-model",
-      "assistant",
-      "sampled text",
-      "accept",
+      #assistant,
+      Some("sampled text"),
+      #accept,
       Some("1234"),
       ["info:callback-log", "notice:callback-log-session"],
       ["memo://alpha"],

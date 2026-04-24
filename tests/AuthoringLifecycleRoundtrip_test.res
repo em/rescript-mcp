@@ -15,12 +15,13 @@ type echoOutput = {
 
 @schema
 type promptArgs = {topic: string}
+
+@schema
+type codeForm = {code: string}
+
 type rootEntry
 
 @get external notificationParams: unknown => dict<unknown> = "params"
-@get external samplingContent: unknown => unknown = "content"
-@get external textContentText: unknown => string = "text"
-@return(nullable) @get external elicitationContent: unknown => option<dict<unknown>> = "content"
 @get external listedRoots: unknown => array<rootEntry> = "roots"
 @get external rootUri: rootEntry => string = "uri"
 
@@ -71,27 +72,25 @@ describe("authoring lifecycle roundtrip", () => {
       #samplingCreateMessage,
       (_request, _ctx) =>
         Promise.resolve(
-          Dict.fromArray([
-            ("model", "sample-model"->McpTestBindings.stringToUnknown),
-            ("role", "assistant"->McpTestBindings.stringToUnknown),
-            ("content", McpTestBindings.makeTextContent("sampled-from-client")),
-          ])
-          ->McpTestBindings.dictToUnknown,
+          McpCreateMessageResult.make(
+            ~model="sample-model",
+            ~role=#assistant,
+            ~content=McpSamplingContent.text("sampled-from-client"),
+            (),
+          )
+          ->McpTestBindings.toUnknown,
         ),
     )
     client->McpTestBindings.setClientRequestHandlerRaw(
       #elicitationCreate,
       (_request, _ctx) =>
         Promise.resolve(
-          Dict.fromArray([
-            ("action", "accept"->McpTestBindings.stringToUnknown),
-            (
-              "content",
-              Dict.fromArray([("code", "42"->McpTestBindings.stringToUnknown)])
-              ->McpTestBindings.dictToUnknown,
-            ),
-          ])
-          ->McpTestBindings.dictToUnknown,
+          McpElicitResult.make(
+            ~action=#accept,
+            ~content=Dict.fromArray([("code", "42"->McpTestBindings.stringToUnknown)]),
+            (),
+          )
+          ->McpTestBindings.toUnknown,
         ),
     )
     client->McpTestBindings.setClientRequestHandlerRaw(
@@ -131,22 +130,34 @@ describe("authoring lifecycle roundtrip", () => {
         ),
         async (args, ctx) => {
           let sampling =
-            await ctx->McpServerContext.requestSamplingRawWithOptions(
-              McpTestBindings.makeSamplingRequestParams(~text="tool request", ~maxTokens=32),
+            await ctx->McpServerContext.requestSamplingWithOptions(
+              McpCreateMessageParams.make(
+                ~messages=[McpSamplingMessage.text(~role=#user, ~text="tool request")],
+                ~maxTokens=32,
+                (),
+              ),
               timeoutOptions,
             )
           let elicitation =
-            await ctx->McpServerContext.elicitInputRawWithOptions(
-              McpTestBindings.makeCodeElicitationRequestParams("Provide a code"),
+            await ctx->McpServerContext.elicitFormInputWithOptions(
+              McpElicitRequestFormParams.make(
+                ~message="Provide a code",
+                ~requestedSchema=codeFormSchema->McpStandardSchema.jsonSchemaOfRescriptSchema->McpTestBindings.toDict,
+                (),
+              ),
               timeoutOptions,
             )
           let roots =
             await ctx
             ->McpServerContext.sendRelatedRequestRawWithOptions(#rootsList, Dict.fromArray([]), timeoutOptions)
-          let sampledText = sampling->samplingContent->textContentText
+          let sampledText =
+            sampling
+            ->McpCreateMessageResult.content
+            ->McpSamplingContent.textValue
+            ->Option.getOr("missing")
           let code =
             elicitation
-            ->elicitationContent
+            ->McpElicitResult.content
             ->Option.flatMap(content => content->Dict.get("code")->Option.map(McpTestBindings.unknownToString))
             ->Option.getOr("missing")
           let root =

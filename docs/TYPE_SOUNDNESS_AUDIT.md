@@ -1,6 +1,6 @@
 # Type Soundness Audit
 
-**BUILD PASSING.** `npm run build`, `npm test`, and `npm pack --dry-run` pass on 2026-04-24 after the typed tool-output, typed client result-classification, typed task-result storage, and finite protocol-version control work.
+**BUILD PASSING.** `npm run build`, `npm test`, and `npm pack --dry-run` pass on 2026-04-24 after the typed tool-output, typed client result-classification, typed task-result storage, typed ordinary sampling/elicitation surface, and finite protocol-version control work.
 
 ## Scope
 
@@ -12,6 +12,7 @@ This audit covers the non-trivial public binding changes in the current package 
 - `McpProtocolVersion`, `McpTypes.*ProtocolVersion`, `McpClient.getNegotiatedProtocolVersion`, and the public protocol-version option/transport surfaces now bind the installed supported-version list as a finite algebra
 - `McpServer.registerResourceTemplate` and registered `update` handles are exposed
 - `McpServerContext` exposes the installed high-level request APIs and HTTP fields
+- `McpCreateMessageParams`, `McpCreateMessageResult`, `McpModelPreferences`, `McpSamplingContent`, `McpSamplingMessage`, `McpElicitRequestFormParams`, `McpElicitRequestUrlParams`, and `McpElicitResult` now bind the installed ordinary sampling and elicitation request/result objects on the public path
 - `McpClient` now exposes typed protocol request/result methods for the installed prompt, resource, completion, logging-level, and tool-call surface
 - `McpClient.setNotificationHandlerRaw` and `removeNotificationHandlerRaw` now bind the installed client notification-handler API
 - `McpLoggingMessageParams` and `McpResourceUpdatedParams` now bind the installed notification parameter objects
@@ -42,7 +43,13 @@ This audit covers the non-trivial public binding changes in the current package 
   - `McpClient.setNotificationHandlerRaw`
   - `McpClient.removeNotificationHandlerRaw`
 - Server-context request APIs:
+  - `McpServerContext.requestSampling`
+  - `McpServerContext.requestSamplingWithOptions`
   - `McpServerContext.requestSamplingRawWithOptions`
+  - `McpServerContext.elicitFormInput`
+  - `McpServerContext.elicitFormInputWithOptions`
+  - `McpServerContext.elicitUrlInput`
+  - `McpServerContext.elicitUrlInputWithOptions`
   - `McpServerContext.elicitInputRawWithOptions`
   - `McpServerContext.sendRelatedRequestRawWithOptions`
   - `McpServerContext.sendRelatedNotificationRaw`
@@ -52,7 +59,13 @@ This audit covers the non-trivial public binding changes in the current package 
 - Low-level callback and notification surface:
   - `McpClient.registerCapabilities`
   - `McpClient.setRequestHandlerRaw`
+  - `McpLowLevelServer.createMessage`
+  - `McpLowLevelServer.createMessageWithOptions`
   - `McpLowLevelServer.createMessageRaw`
+  - `McpLowLevelServer.elicitFormInput`
+  - `McpLowLevelServer.elicitFormInputWithOptions`
+  - `McpLowLevelServer.elicitUrlInput`
+  - `McpLowLevelServer.elicitUrlInputWithOptions`
   - `McpLowLevelServer.elicitInputRaw`
   - `McpLowLevelServer.listRoots`
   - `McpLowLevelServer.sendLoggingMessage`
@@ -98,12 +111,16 @@ This audit covers the non-trivial public binding changes in the current package 
   - proves the real `McpServer` authoring surface against a live `Client`
   - proves 0-arg and schema-backed register/update paths
   - proves resource-template registration and post-registration updates
+  - proves typed `McpServerContext.requestSampling*` and typed `elicitFormInput*` against live client callback handlers
   - proves `McpServerContext` related-request APIs against live client callback handlers
   - proves `McpServerContext.sendRelatedNotificationRaw`, `log`, and `logWithLogger` through observed `notifications/message` client handlers
   - proves high-level `McpServer.sendLoggingMessage` and `sendLoggingMessageWithSessionId` through observed client notifications
 - `tests/LowLevelCallbackRoundtrip_test.res`
-  - proves low-level sampling, elicitation, and roots roundtrips
+  - proves typed low-level sampling, typed low-level form elicitation, and roots roundtrips
   - proves low-level `sendLoggingMessage*` and `sendResourceUpdated` through observed client notification handlers
+- `tests/PublicWrapperCoverage_test.res`
+  - proves the public builders/accessors for `McpCreateMessageParams`, `McpCreateMessageResult`, `McpModelPreferences`, `McpSamplingContent`, `McpSamplingMessage`, `McpElicitRequestFormParams`, `McpElicitRequestUrlParams`, and `McpElicitResult`
+  - proves typed and raw low-level/server-context sampling and elicitation wrapper dispatch through runtime fixtures
 - `tests/BindingObjectSurface_test.res`
   - proves option/config builders, typed `LoggingMessageParams`, typed `ResourceUpdatedParams`, grouped entrypoints, finite protocol-version builders/setters/getters, typed URI-template scalar-or-array variables, message extra info, typed resource-template `listCallback`, and registered-handle method dispatch
 - `tests/ProtocolSurface_test.res`, `tests/HttpRoundtrip_test.res`, and `tests/WebStandardRequestResponse_test.res`
@@ -126,6 +143,7 @@ This audit covers the non-trivial public binding changes in the current package 
   - high-level authoring
   - ordinary typed `structuredContent`
   - typed task-result storage and retrieval reuse
+  - typed ordinary sampling requests/results and typed elicitation request envelopes
   - finite protocol-version constants, setters/getters, and negotiated-version roundtrips
   - exact URI-template variables
   - typed resource-template callback variables
@@ -134,8 +152,10 @@ This audit covers the non-trivial public binding changes in the current package 
 ## Known Open Boundaries
 
 - `McpLowLevelServer.setRequestHandlerRaw`, `McpClient.setRequestHandlerRaw`, and `McpClient.setNotificationHandlerRaw` remain intentionally raw.
-- `McpLowLevelServer.createMessageRaw*` and `McpLowLevelServer.elicitInputRaw*` remain open at `dict<unknown>` and `promise<unknown>`.
-- `McpServerContext.sendRelatedRequestRaw*`, `requestSamplingRaw*`, and `elicitInputRaw*` remain open at `dict<unknown>` and `promise<unknown>`.
+- `McpLowLevelServer.createMessageRaw*` and `McpServerContext.requestSamplingRaw*` remain the explicit raw seams for tool-enabled sampling requests/results and sampling-message `tool_use` / `tool_result` blocks.
+- `McpLowLevelServer.elicitInputRaw*` and `McpServerContext.elicitInputRaw*` remain explicit raw escape hatches alongside the typed form/url request wrappers.
+- `McpServerContext.sendRelatedRequestRaw*` remains open at method-indexed `string`, `dict<unknown>`, and `promise<unknown>`.
+- `McpElicitRequestFormParams.requestedSchema` and `McpElicitResult.content` remain schema-owned leaves at `dict<unknown>`.
 - `McpCallToolParams.argumentValues`, `McpToolSchema.properties`, and protocol `_meta` dictionaries remain open caller-owned protocol payloads.
 - `McpLoggingMessageParams.data` remains `unknown` because upstream logging data is explicitly open.
 - `McpCallToolResult.raw`, `McpTaskStore.storeTaskResultRaw*`, `McpTaskStore.getTaskResultRaw*`, `McpRequestTaskStore.storeTaskResultRaw`, and `McpRequestTaskStore.getTaskResultRaw` remain the explicit raw heterogeneous escape hatches for non-tool task payloads.
@@ -155,4 +175,4 @@ This audit covers the non-trivial public binding changes in the current package 
 - Internal runtime-tested typed tool output, typed client result classification, typed task-result storage, finite protocol-version control, exact URI-template variable algebra, notification parameter, notification handler, transport, and experimental task surface: directly tested on the typed 99% path
 - Raw low-level request/result seams, queue payloads, transport messages, and caller-owned metadata remain intentionally open and explicitly secondary
 - Release-facing soundness status: the four rows in `docs/RELEASE_BLOCKERS.md` are closed on 2026-04-23
-- Full upstream public line is still not complete because the raw method-indexed sampling, elicitation, related-request, JSON-RPC message, and task payload seams remain open
+- Full upstream public line is still not complete because tool-enabled sampling, method-indexed related requests, JSON-RPC messages, and task payload seams remain open

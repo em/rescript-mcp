@@ -13,8 +13,20 @@ let sendRelatedRequestRawWithOptions: (t, McpMethod.request, dict<unknown>, McpR
 let sendRelatedNotificationRaw: (t, McpMethod.notification, dict<unknown>) => promise<unit>
 let log: (t, McpLoggingMessageParams.level, unknown) => promise<unit>
 let logWithLogger: (t, McpLoggingMessageParams.level, unknown, string) => promise<unit>
+let elicitFormInput: (t, McpElicitRequestFormParams.t) => promise<McpElicitResult.t>
+let elicitFormInputWithOptions: (t, McpElicitRequestFormParams.t, McpRequestOptions.t) => promise<
+  McpElicitResult.t,
+>
+let elicitUrlInput: (t, McpElicitRequestUrlParams.t) => promise<McpElicitResult.t>
+let elicitUrlInputWithOptions: (t, McpElicitRequestUrlParams.t, McpRequestOptions.t) => promise<
+  McpElicitResult.t,
+>
 let elicitInputRaw: (t, dict<unknown>) => promise<unknown>
 let elicitInputRawWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
+let requestSampling: (t, McpCreateMessageParams.t) => promise<McpCreateMessageResult.t>
+let requestSamplingWithOptions: (t, McpCreateMessageParams.t, McpRequestOptions.t) => promise<
+  McpCreateMessageResult.t,
+>
 let requestSamplingRaw: (t, dict<unknown>) => promise<unknown>
 let requestSamplingRawWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown>
 let httpAuthInfo: t => option<McpAuthInfo.t>

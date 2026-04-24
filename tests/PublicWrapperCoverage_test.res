@@ -5,6 +5,9 @@ module Json = Mcp.Protocol.JsonValue
 @schema
 type typedOutput = {message: string}
 
+@schema
+type codeForm = {code: string}
+
 @obj
 external makeTaskFixture: (
   ~taskId: string,
@@ -29,8 +32,14 @@ external makeServerContextMcpReqFixture: (
   ~id: McpTypes.requestId,
   ~method: string,
   ~signal: Webapi.Fetch.signal,
+  ~requestSampling: unknown=?,
+  ~elicitInput: unknown=?,
   (),
 ) => unknown = ""
+
+@obj
+external makeLowLevelServerFixture: (~createMessage: unknown, ~elicitInput: unknown, ()) => McpLowLevelServer.t =
+  ""
 
 @obj
 external makeRequestTaskStoreFixture: (
@@ -190,6 +199,19 @@ let rawStructuredMessage = (result: McpCallToolResult.raw) =>
 
 let stringField = (value, field) =>
   value->McpTestBindings.toDict->Dict.get(field)->Option.map(McpTestBindings.unknownToString)
+
+let samplingContentKindString = content =>
+  switch content->McpSamplingContent.kind {
+  | #text => "text"
+  | #image => "image"
+  | #audio => "audio"
+  }
+
+let samplingMessageKinds = message =>
+  switch message->McpSamplingMessage.content {
+  | #single(content) => [content->samplingContentKindString]
+  | #multiple(contents) => contents->Array.map(samplingContentKindString)
+  }
 
 describe("public wrapper coverage", () => {
   test("protocol builders preserve public typed fields", t => {
@@ -627,6 +649,381 @@ describe("public wrapper coverage", () => {
       Some("raw-task"),
       Some("zero-task"),
       Some("zero-raw"),
+    ))
+  })
+
+  test("sampling and elicitation protocol builders preserve typed public fields", t => {
+    let expect = value => t->expect(value)
+    let hint = McpModelPreferences.makeHint(~name="gpt-4.1", ())
+    let modelPreferences =
+      McpModelPreferences.make(
+        ~hints=[hint],
+        ~costPriority=0.25,
+        ~speedPriority=0.5,
+        ~intelligencePriority=0.75,
+        (),
+      )
+    let singleMessage = McpSamplingMessage.text(~role=#user, ~text="hello")
+    let manyMessage =
+      McpSamplingMessage.makeMany(
+        ~role=#assistant,
+        ~content=[
+          McpSamplingContent.image(~data="aW1hZ2U=", ~mimeType="image/png"),
+          McpSamplingContent.audio(~data="YXVkaW8=", ~mimeType="audio/wav"),
+        ],
+        (),
+      )
+    let createMessageParams =
+      McpCreateMessageParams.make(
+        ~messages=[singleMessage, manyMessage],
+        ~maxTokens=128,
+        ~modelPreferences,
+        ~systemPrompt="system",
+        ~includeContext=#allServers,
+        ~temperature=0.2,
+        ~stopSequences=["END"],
+        ~metadata=meta,
+        ~_meta=meta,
+        (),
+      )
+    let createMessageResult =
+      McpCreateMessageResult.make(
+        ~model="gpt-4.1",
+        ~role=#assistant,
+        ~content=McpSamplingContent.text("reply"),
+        ~stopReason=#endTurn,
+        ~_meta=meta,
+        (),
+      )
+    let formParams =
+      McpElicitRequestFormParams.make(
+        ~message="Provide a code",
+        ~requestedSchema=codeFormSchema->McpStandardSchema.jsonSchemaOfRescriptSchema->McpTestBindings.toDict,
+        ~_meta=meta,
+        (),
+      )
+    let urlParams =
+      McpElicitRequestUrlParams.make(
+        ~message="Open the verifier",
+        ~elicitationId="elic-1",
+        ~url="https://example.com",
+        ~_meta=meta,
+        (),
+      )
+    let elicitationResult =
+      McpElicitResult.make(
+        ~action=#accept,
+        ~content=Dict.fromArray([("code", "1234"->McpTestBindings.stringToUnknown)]),
+        ~_meta=meta,
+        (),
+      )
+
+    (
+      modelPreferences->McpModelPreferences.hints->Option.map(Array.length),
+      modelPreferences->McpModelPreferences.costPriority,
+      modelPreferences->McpModelPreferences.speedPriority,
+      modelPreferences->McpModelPreferences.intelligencePriority,
+      hint->McpModelPreferences.hintName,
+      createMessageParams->McpCreateMessageParams.messages->Array.map(message => (
+        message->McpSamplingMessage.role,
+        message->samplingMessageKinds,
+      )),
+      createMessageParams->McpCreateMessageParams.maxTokens,
+      createMessageParams
+      ->McpCreateMessageParams.modelPreferences
+      ->Option.flatMap(preferences =>
+          preferences
+          ->McpModelPreferences.hints
+          ->Option.flatMap(hints =>
+              hints->Array.get(0)->Option.flatMap(McpModelPreferences.hintName)
+            )
+        ),
+      createMessageParams->McpCreateMessageParams.systemPrompt,
+      createMessageParams->McpCreateMessageParams.includeContext,
+      createMessageParams->McpCreateMessageParams.temperature,
+      createMessageParams->McpCreateMessageParams.stopSequences,
+      createMessageParams
+      ->McpCreateMessageParams.metadata
+      ->Option.flatMap(metadata => metadata->Dict.get("_owner")->Option.map(McpTestBindings.unknownToString)),
+      createMessageParams
+      ->McpCreateMessageParams.meta
+      ->Option.flatMap(metadata => metadata->Dict.get("_owner")->Option.map(McpTestBindings.unknownToString)),
+      createMessageResult->McpCreateMessageResult.model,
+      createMessageResult->McpCreateMessageResult.role,
+      createMessageResult->McpCreateMessageResult.content->McpSamplingContent.kind,
+      createMessageResult->McpCreateMessageResult.content->McpSamplingContent.textValue,
+      createMessageResult->McpCreateMessageResult.stopReason,
+      createMessageResult
+      ->McpCreateMessageResult.meta
+      ->Option.flatMap(metadata => metadata->Dict.get("_owner")->Option.map(McpTestBindings.unknownToString)),
+      formParams->McpElicitRequestFormParams.message,
+      formParams
+      ->McpElicitRequestFormParams.requestedSchema
+      ->Dict.get("type")
+      ->Option.map(McpTestBindings.unknownToString),
+      formParams
+      ->McpElicitRequestFormParams.meta
+      ->Option.flatMap(metadata => metadata->Dict.get("_owner")->Option.map(McpTestBindings.unknownToString)),
+      urlParams->McpElicitRequestUrlParams.message,
+      urlParams->McpElicitRequestUrlParams.elicitationId,
+      urlParams->McpElicitRequestUrlParams.url,
+      urlParams
+      ->McpElicitRequestUrlParams.meta
+      ->Option.flatMap(metadata => metadata->Dict.get("_owner")->Option.map(McpTestBindings.unknownToString)),
+      elicitationResult->McpElicitResult.action,
+      elicitationResult
+      ->McpElicitResult.content
+      ->Option.flatMap(content => content->Dict.get("code")->Option.map(McpTestBindings.unknownToString)),
+      elicitationResult
+      ->McpElicitResult.meta
+      ->Option.flatMap(metadata => metadata->Dict.get("_owner")->Option.map(McpTestBindings.unknownToString)),
+    )
+    ->expect
+    ->Expect.toEqual((
+      Some(1),
+      Some(0.25),
+      Some(0.5),
+      Some(0.75),
+      Some("gpt-4.1"),
+      [(#user, ["text"]), (#assistant, ["image", "audio"])],
+      128,
+      Some("gpt-4.1"),
+      Some("system"),
+      Some(#allServers),
+      Some(0.2),
+      Some(["END"]),
+      Some("coverage"),
+      Some("coverage"),
+      "gpt-4.1",
+      #assistant,
+      #text,
+      Some("reply"),
+      Some(#endTurn),
+      Some("coverage"),
+      "Provide a code",
+      Some("object"),
+      Some("coverage"),
+      "Open the verifier",
+      "elic-1",
+      "https://example.com",
+      Some("coverage"),
+      #accept,
+      Some("1234"),
+      Some("coverage"),
+    ))
+  })
+
+  testAsync("typed sampling and elicitation wrappers dispatch through low-level and context objects", async t => {
+    let expect = value => t->expect(value)
+    let options = McpRequestOptions.make(~timeout=750, ())
+    let createCalls = ref([])
+    let elicitCalls = ref([])
+    let createResult =
+      McpCreateMessageResult.make(
+        ~model="fixture-model",
+        ~role=#assistant,
+        ~content=McpSamplingContent.text("typed reply"),
+        ~stopReason=#stopSequence,
+        (),
+      )
+    let formResult =
+      McpElicitResult.make(
+        ~action=#accept,
+        ~content=Dict.fromArray([("code", "alpha"->McpTestBindings.stringToUnknown)]),
+        (),
+      )
+    let urlResult = McpElicitResult.make(~action=#decline, ())
+    let createRequest =
+      McpCreateMessageParams.make(
+        ~messages=[McpSamplingMessage.text(~role=#user, ~text="hello fixture")],
+        ~maxTokens=64,
+        ~includeContext=#thisServer,
+        ~_meta=meta,
+        (),
+      )
+    let formParams =
+      McpElicitRequestFormParams.make(
+        ~message="Need form data",
+        ~requestedSchema=codeFormSchema->McpStandardSchema.jsonSchemaOfRescriptSchema->McpTestBindings.toDict,
+        (),
+      )
+    let urlParams =
+      McpElicitRequestUrlParams.make(
+        ~message="Need URL confirmation",
+        ~elicitationId="elic-fixture",
+        ~url="https://example.com/fixture",
+        (),
+      )
+    let lowLevelServer =
+      makeLowLevelServerFixture(
+        ~createMessage=((params: McpCreateMessageParams.t, requestOptions: option<McpRequestOptions.t>) => {
+          createCalls := [
+            (
+              params->McpCreateMessageParams.maxTokens,
+              params->McpCreateMessageParams.includeContext,
+              requestOptions != None,
+            ),
+            ...createCalls.contents,
+          ]
+          Promise.resolve(createResult)
+        })->McpTestBindings.toUnknown,
+        ~elicitInput=((params: unknown, requestOptions: option<McpRequestOptions.t>) => {
+          let value = params->McpTestBindings.toDict
+          let mode = value->Dict.get("mode")->Option.map(McpTestBindings.unknownToString)->Option.getOr("form")
+          elicitCalls := [(mode, requestOptions != None), ...elicitCalls.contents]
+          Promise.resolve(mode == "url" ? urlResult : formResult)
+        })->McpTestBindings.toUnknown,
+        (),
+      )
+    let abortController = Webapi.Fetch.AbortController.make()
+    let context =
+      makeServerContextFixture(
+        ~mcpReq=makeServerContextMcpReqFixture(
+          ~id=1->McpTestBindings.intToRequestId,
+          ~method="tools/call",
+          ~signal=abortController->Webapi.Fetch.AbortController.signal,
+          ~requestSampling=((params: McpCreateMessageParams.t, requestOptions: option<McpRequestOptions.t>) => {
+            createCalls := [
+              (
+                params->McpCreateMessageParams.maxTokens,
+                params->McpCreateMessageParams.includeContext,
+                requestOptions != None,
+              ),
+              ...createCalls.contents,
+            ]
+            Promise.resolve(createResult)
+          })->McpTestBindings.toUnknown,
+          ~elicitInput=((params: unknown, requestOptions: option<McpRequestOptions.t>) => {
+            let value = params->McpTestBindings.toDict
+            let mode = value->Dict.get("mode")->Option.map(McpTestBindings.unknownToString)->Option.getOr("form")
+            elicitCalls := [(mode, requestOptions != None), ...elicitCalls.contents]
+            Promise.resolve(mode == "url" ? urlResult : formResult)
+          })->McpTestBindings.toUnknown,
+          (),
+        ),
+        (),
+      )
+
+    let typedCreate = await lowLevelServer->McpLowLevelServer.createMessage(createRequest)
+    let typedCreateWithOptions =
+      await lowLevelServer->McpLowLevelServer.createMessageWithOptions(createRequest, options)
+    let rawCreate =
+      await lowLevelServer->McpLowLevelServer.createMessageRaw(createRequest->McpTestBindings.toDict)
+    let rawCreateWithOptions =
+      await lowLevelServer->McpLowLevelServer.createMessageRawWithOptions(
+        createRequest->McpTestBindings.toDict,
+        options,
+      )
+    let typedForm = await lowLevelServer->McpLowLevelServer.elicitFormInput(formParams)
+    let typedFormWithOptions =
+      await lowLevelServer->McpLowLevelServer.elicitFormInputWithOptions(formParams, options)
+    let typedUrl = await lowLevelServer->McpLowLevelServer.elicitUrlInput(urlParams)
+    let typedUrlWithOptions =
+      await lowLevelServer->McpLowLevelServer.elicitUrlInputWithOptions(urlParams, options)
+    let rawElicit = await lowLevelServer->McpLowLevelServer.elicitInputRaw(formParams->McpTestBindings.toDict)
+    let rawElicitWithOptions =
+      await lowLevelServer->McpLowLevelServer.elicitInputRawWithOptions(
+        urlParams->McpTestBindings.toDict,
+        options,
+      )
+
+    let contextTypedCreate = await context->McpServerContext.requestSampling(createRequest)
+    let contextTypedCreateWithOptions =
+      await context->McpServerContext.requestSamplingWithOptions(createRequest, options)
+    let contextRawCreate =
+      await context->McpServerContext.requestSamplingRaw(createRequest->McpTestBindings.toDict)
+    let contextRawCreateWithOptions =
+      await context->McpServerContext.requestSamplingRawWithOptions(
+        createRequest->McpTestBindings.toDict,
+        options,
+      )
+    let contextTypedForm = await context->McpServerContext.elicitFormInput(formParams)
+    let contextTypedFormWithOptions =
+      await context->McpServerContext.elicitFormInputWithOptions(formParams, options)
+    let contextTypedUrl = await context->McpServerContext.elicitUrlInput(urlParams)
+    let contextTypedUrlWithOptions =
+      await context->McpServerContext.elicitUrlInputWithOptions(urlParams, options)
+    let contextRawElicit = await context->McpServerContext.elicitInputRaw(formParams->McpTestBindings.toDict)
+    let contextRawElicitWithOptions =
+      await context->McpServerContext.elicitInputRawWithOptions(
+        urlParams->McpTestBindings.toDict,
+        options,
+      )
+
+    (
+      typedCreate->McpCreateMessageResult.content->McpSamplingContent.textValue,
+      typedCreateWithOptions->McpCreateMessageResult.stopReason,
+      rawCreate->stringField("model"),
+      rawCreateWithOptions->stringField("model"),
+      typedForm->McpElicitResult.action,
+      typedFormWithOptions
+      ->McpElicitResult.content
+      ->Option.flatMap(content => content->Dict.get("code")->Option.map(McpTestBindings.unknownToString)),
+      typedUrl->McpElicitResult.action,
+      typedUrlWithOptions->McpElicitResult.action,
+      rawElicit->stringField("action"),
+      rawElicitWithOptions->stringField("action"),
+      contextTypedCreate->McpCreateMessageResult.content->McpSamplingContent.textValue,
+      contextTypedCreateWithOptions->McpCreateMessageResult.stopReason,
+      contextRawCreate->stringField("model"),
+      contextRawCreateWithOptions->stringField("model"),
+      contextTypedForm->McpElicitResult.action,
+      contextTypedFormWithOptions
+      ->McpElicitResult.content
+      ->Option.flatMap(content => content->Dict.get("code")->Option.map(McpTestBindings.unknownToString)),
+      contextTypedUrl->McpElicitResult.action,
+      contextTypedUrlWithOptions->McpElicitResult.action,
+      contextRawElicit->stringField("action"),
+      contextRawElicitWithOptions->stringField("action"),
+      createCalls.contents,
+      elicitCalls.contents,
+    )
+    ->expect
+    ->Expect.toEqual((
+      Some("typed reply"),
+      Some(#stopSequence),
+      Some("fixture-model"),
+      Some("fixture-model"),
+      #accept,
+      Some("alpha"),
+      #decline,
+      #decline,
+      Some("accept"),
+      Some("decline"),
+      Some("typed reply"),
+      Some(#stopSequence),
+      Some("fixture-model"),
+      Some("fixture-model"),
+      #accept,
+      Some("alpha"),
+      #decline,
+      #decline,
+      Some("accept"),
+      Some("decline"),
+      [
+        (64, Some(#thisServer), true),
+        (64, Some(#thisServer), false),
+        (64, Some(#thisServer), true),
+        (64, Some(#thisServer), false),
+        (64, Some(#thisServer), true),
+        (64, Some(#thisServer), false),
+        (64, Some(#thisServer), true),
+        (64, Some(#thisServer), false),
+      ],
+      [
+        ("url", true),
+        ("form", false),
+        ("url", true),
+        ("url", false),
+        ("form", true),
+        ("form", false),
+        ("url", true),
+        ("form", false),
+        ("url", true),
+        ("url", false),
+        ("form", true),
+        ("form", false),
+      ],
     ))
   })
 

@@ -114,23 +114,62 @@ The public `.resi` files stay authoritative. This file explains where the bindin
 ### Sampling, elicitation, and related-request APIs
 
 - Public surface:
+  - `McpCreateMessageParams`
+  - `McpCreateMessageResult`
+  - `McpModelPreferences`
+  - `McpSamplingContent`
+  - `McpSamplingMessage`
+  - `McpElicitRequestFormParams`
+  - `McpElicitRequestUrlParams`
+  - `McpElicitResult`
+  - `McpLowLevelServer.createMessage`
+  - `McpLowLevelServer.createMessageWithOptions`
   - `McpLowLevelServer.createMessageRaw`
   - `McpLowLevelServer.createMessageRawWithOptions`
+  - `McpLowLevelServer.elicitFormInput`
+  - `McpLowLevelServer.elicitFormInputWithOptions`
+  - `McpLowLevelServer.elicitUrlInput`
+  - `McpLowLevelServer.elicitUrlInputWithOptions`
   - `McpLowLevelServer.elicitInputRaw`
   - `McpLowLevelServer.elicitInputRawWithOptions`
+  - `McpServerContext.requestSampling`
+  - `McpServerContext.requestSamplingWithOptions`
   - `McpServerContext.requestSamplingRaw`
   - `McpServerContext.requestSamplingRawWithOptions`
+  - `McpServerContext.elicitFormInput`
+  - `McpServerContext.elicitFormInputWithOptions`
+  - `McpServerContext.elicitUrlInput`
+  - `McpServerContext.elicitUrlInputWithOptions`
   - `McpServerContext.elicitInputRaw`
   - `McpServerContext.elicitInputRawWithOptions`
   - `McpServerContext.sendRelatedRequestRaw`
   - `McpServerContext.sendRelatedRequestRawWithOptions`
   - `McpServerContext.sendRelatedNotificationRaw`
 - ReScript representation:
-  - params payloads: `dict<unknown>`
-  - result payloads: `promise<unknown>`
+  - ordinary no-tools sampling requests and results use dedicated typed modules:
+    - `McpCreateMessageParams`
+    - `McpCreateMessageResult`
+    - `McpSamplingContent`
+    - `McpSamplingMessage`
+    - `McpModelPreferences`
+  - typed sampling messages intentionally cover the ordinary text-image-audio subset
+  - typed elicitation covers both installed request envelopes:
+    - `McpElicitRequestFormParams`
+    - `McpElicitRequestUrlParams`
+    - `McpElicitResult`
+  - explicit schema-owned leaves remain open:
+    - `McpElicitRequestFormParams.requestedSchema: dict<unknown>`
+    - `McpElicitResult.content: option<dict<unknown>>`
+  - raw sampling request/result seams remain explicit for the wider installed overloads
   - related request methods remain plain `string`
 - Why: the installed SDK still models these surfaces through overloads or method-indexed request maps. The binding keeps those dynamic seams explicit until the full request/result algebra is exported as dedicated ReScript modules.
-
+  - the installed sampling surface splits into an ordinary no-tools overload and a wider tool-enabled overload
+  - the installed sampling-message union also includes `tool_use` and `tool_result` blocks beyond the ordinary typed subset
+  - the installed elicitation surface fixes the outer form/url envelopes but keeps the form schema and accepted content leaf schema-owned
+- Current consequence:
+  - ordinary typed sampling and typed elicitation no longer require repo-local raw payload builders
+  - tool-enabled sampling requests/results and sampling-message `tool_use` / `tool_result` blocks remain on the explicit raw path
+  - related request methods still use the explicit raw method-index seam
 ### Request-scoped and stored task results
 
 - Public surface:

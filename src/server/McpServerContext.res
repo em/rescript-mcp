@@ -72,6 +72,31 @@ external requestSamplingRawWithOptions: (mcpReq, dict<unknown>, McpRequestOption
   unknown,
 > = "requestSampling"
 
+@send
+external elicitFormInput: (mcpReq, McpElicitRequestFormParams.t) => promise<McpElicitResult.t> = "elicitInput"
+
+@send
+external elicitFormInputWithOptions: (mcpReq, McpElicitRequestFormParams.t, McpRequestOptions.t) => promise<
+  McpElicitResult.t,
+> = "elicitInput"
+
+@send
+external elicitUrlInput: (mcpReq, McpElicitRequestUrlParams.t) => promise<McpElicitResult.t> = "elicitInput"
+
+@send
+external elicitUrlInputWithOptions: (mcpReq, McpElicitRequestUrlParams.t, McpRequestOptions.t) => promise<
+  McpElicitResult.t,
+> = "elicitInput"
+
+@send
+external requestSampling: (mcpReq, McpCreateMessageParams.t) => promise<McpCreateMessageResult.t> =
+  "requestSampling"
+
+@send
+external requestSamplingWithOptions: (mcpReq, McpCreateMessageParams.t, McpRequestOptions.t) => promise<
+  McpCreateMessageResult.t,
+> = "requestSampling"
+
 @return(nullable)
 @get
 external authInfoRaw: http => option<McpAuthInfo.t> = "authInfo"
@@ -107,9 +132,18 @@ let logWithLogger = (context, level, data, logger) => context->mcpReq->logWithLo
 let elicitInputRaw = (context, params) => context->mcpReq->elicitInputRaw(params)
 let elicitInputRawWithOptions = (context, params, options) =>
   context->mcpReq->elicitInputRawWithOptions(params, options)
+let elicitFormInput = (context, params) => context->mcpReq->elicitFormInput(params)
+let elicitFormInputWithOptions = (context, params, options) =>
+  context->mcpReq->elicitFormInputWithOptions(params, options)
+let elicitUrlInput = (context, params) => context->mcpReq->elicitUrlInput(params)
+let elicitUrlInputWithOptions = (context, params, options) =>
+  context->mcpReq->elicitUrlInputWithOptions(params, options)
 let requestSamplingRaw = (context, params) => context->mcpReq->requestSamplingRaw(params)
 let requestSamplingRawWithOptions = (context, params, options) =>
   context->mcpReq->requestSamplingRawWithOptions(params, options)
+let requestSampling = (context, params) => context->mcpReq->requestSampling(params)
+let requestSamplingWithOptions = (context, params, options) =>
+  context->mcpReq->requestSamplingWithOptions(params, options)
 let httpAuthInfo = context => context->httpRaw->Option.flatMap(authInfoRaw)
 let httpRequest = context => context->httpRaw->Option.flatMap(requestRaw)
 let closeSSE = context => context->httpRaw->Option.flatMap(closeSSERaw)

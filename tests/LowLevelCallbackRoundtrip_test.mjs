@@ -6,14 +6,25 @@ import * as Belt_Array from "@rescript/runtime/lib/es6/Belt_Array.js";
 import * as TestSupport from "./TestSupport.mjs";
 import * as Stdlib_Option from "@rescript/runtime/lib/es6/Stdlib_Option.js";
 import * as McpEmptyResult from "../src/protocol/McpEmptyResult.mjs";
+import * as McpElicitResult from "../src/protocol/McpElicitResult.mjs";
 import * as McpTestBindings from "./support/McpTestBindings.mjs";
-import * as Primitive_option from "@rescript/runtime/lib/es6/Primitive_option.js";
+import * as S$RescriptSchema from "rescript-schema/src/S.mjs";
 import * as McpCompleteParams from "../src/protocol/McpCompleteParams.mjs";
 import * as McpCompleteResult from "../src/protocol/McpCompleteResult.mjs";
 import * as McpLowLevelServer from "../src/server/McpLowLevelServer.mjs";
+import * as McpStandardSchema from "../src/protocol/McpStandardSchema.mjs";
 import * as McpListRootsResult from "../src/protocol/McpListRootsResult.mjs";
+import * as McpSamplingContent from "../src/protocol/McpSamplingContent.mjs";
+import * as McpSamplingMessage from "../src/protocol/McpSamplingMessage.mjs";
+import * as McpCreateMessageParams from "../src/protocol/McpCreateMessageParams.mjs";
+import * as McpCreateMessageResult from "../src/protocol/McpCreateMessageResult.mjs";
 import * as McpLoggingMessageParams from "../src/protocol/McpLoggingMessageParams.mjs";
 import * as McpResourceUpdatedParams from "../src/protocol/McpResourceUpdatedParams.mjs";
+import * as McpElicitRequestFormParams from "../src/protocol/McpElicitRequestFormParams.mjs";
+
+let codeFormSchema = S$RescriptSchema.schema(s => ({
+  code: s.m(S$RescriptSchema.string)
+}));
 
 function notificationStringField(notification, fieldName) {
   return Stdlib_Option.map(notification.params[fieldName], prim => prim);
@@ -69,33 +80,11 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
     ]
   ]);
   McpTestBindings.registerClientCapabilities(client, clientCapabilities);
-  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", (_request, _ctx) => Promise.resolve(Object.fromEntries([
-    [
-      "model",
-      "test-model"
-    ],
-    [
-      "role",
-      "assistant"
-    ],
-    [
-      "content",
-      McpTestBindings.makeTextContent("sampled text")
-    ]
-  ])));
-  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", (_request, _ctx) => Promise.resolve(Object.fromEntries([
-    [
-      "action",
-      "accept"
-    ],
-    [
-      "content",
-      Object.fromEntries([[
-          "code",
-          "1234"
-        ]])
-    ]
-  ])));
+  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", (_request, _ctx) => Promise.resolve(McpCreateMessageResult.make("test-model", "assistant", McpSamplingContent.text("sampled text"), undefined, undefined, undefined)));
+  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", (_request, _ctx) => Promise.resolve(McpElicitResult.make("accept", Object.fromEntries([[
+      "code",
+      "1234"
+    ]]), undefined, undefined)));
   McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", (_request, _ctx) => Promise.resolve(Object.fromEntries([[
       "roots",
       [Object.fromEntries([
@@ -139,19 +128,19 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
   await McpLowLevelServer.sendResourceUpdated(server, McpResourceUpdatedParams.make("memo://alpha", undefined, undefined));
   let pingResult = await McpLowLevelServer.ping(server);
   let completionResult = await McpClient.complete(client, McpCompleteParams.makeWithPrompt(McpCompleteParams.promptReference("review"), McpCompleteParams.makeArgument("topic", "a", undefined), undefined, undefined, undefined));
-  let samplingResult = await McpTestBindings.createSamplingMessageRaw(server, McpTestBindings.makeSamplingRequestParams("hello server", 64));
-  let elicitationResult = await McpTestBindings.elicitInputRaw(server, McpTestBindings.makeCodeElicitationRequestParams("Provide a code"));
+  let samplingResult = await McpLowLevelServer.createMessage(server, McpCreateMessageParams.make([McpSamplingMessage.text("user", "hello server")], 64, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
+  let elicitationResult = await McpLowLevelServer.elicitFormInput(server, McpElicitRequestFormParams.make("Provide a code", McpStandardSchema.jsonSchemaOfRescriptSchema(codeFormSchema), undefined, undefined));
   let rootsResult = await McpTestBindings.listRootsRaw(server);
   t.expect([
     McpTestBindings.lowLevelServerCapabilities(server)["logging"] !== undefined,
     McpLowLevelServer.getClientCapabilities(server) !== undefined,
     McpEmptyResult.meta(pingResult),
     McpCompleteResult.values(McpCompleteResult.completion(completionResult)),
-    samplingResult.model,
-    samplingResult.role,
-    samplingResult.content.text,
-    elicitationResult.action,
-    Stdlib_Option.flatMap(Primitive_option.fromNullable(elicitationResult.content), content => Stdlib_Option.map(content["code"], prim => prim)),
+    McpCreateMessageResult.model(samplingResult),
+    McpCreateMessageResult.role(samplingResult),
+    McpSamplingContent.textValue(McpCreateMessageResult.content(samplingResult)),
+    McpElicitResult.action(elicitationResult),
+    Stdlib_Option.flatMap(McpElicitResult.content(elicitationResult), content => Stdlib_Option.map(content["code"], prim => prim)),
     loggingNotifications.contents,
     updatedResources.contents,
     McpListRootsResult.roots(rootsResult).map(root => [
@@ -192,6 +181,7 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
 }));
 
 export {
+  codeFormSchema,
   notificationStringField,
 }
-/*  Not a pure module */
+/* codeFormSchema Not a pure module */

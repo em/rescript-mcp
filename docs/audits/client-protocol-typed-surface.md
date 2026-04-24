@@ -143,7 +143,7 @@
 
 ## Residual Risk
 
-- remaining open boundary: sampling, elicitation, related-request, JSON-RPC message, and task-result payload seams
+- remaining open boundary: tool-enabled sampling, sampling-message `tool_use` / `tool_result` blocks, method-indexed related requests, JSON-RPC message, and task-result payload seams
 - why it remains open: the installed SDK still exposes those surfaces as overloads, method-indexed maps, or payload mirrors that this package has not yet exported as dedicated ReScript modules
 - where it is documented:
   - `docs/TYPE_FIDELITY.md`

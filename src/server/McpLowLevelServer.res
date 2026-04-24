@@ -69,11 +69,35 @@ external createMessageRawWithOptions: (t, dict<unknown>, McpRequestOptions.t) =>
   "createMessage"
 
 @send
+external createMessage: (t, McpCreateMessageParams.t) => promise<McpCreateMessageResult.t> = "createMessage"
+
+@send
+external createMessageWithOptions: (t, McpCreateMessageParams.t, McpRequestOptions.t) => promise<
+  McpCreateMessageResult.t,
+> = "createMessage"
+
+@send
 external elicitInputRaw: (t, dict<unknown>) => promise<unknown> = "elicitInput"
 
 @send
 external elicitInputRawWithOptions: (t, dict<unknown>, McpRequestOptions.t) => promise<unknown> =
   "elicitInput"
+
+@send
+external elicitFormInput: (t, McpElicitRequestFormParams.t) => promise<McpElicitResult.t> = "elicitInput"
+
+@send
+external elicitFormInputWithOptions: (t, McpElicitRequestFormParams.t, McpRequestOptions.t) => promise<
+  McpElicitResult.t,
+> = "elicitInput"
+
+@send
+external elicitUrlInput: (t, McpElicitRequestUrlParams.t) => promise<McpElicitResult.t> = "elicitInput"
+
+@send
+external elicitUrlInputWithOptions: (t, McpElicitRequestUrlParams.t, McpRequestOptions.t) => promise<
+  McpElicitResult.t,
+> = "elicitInput"
 
 @send
 external listRoots: t => promise<McpListRootsResult.t> = "listRoots"

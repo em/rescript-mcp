@@ -11,32 +11,46 @@ import * as McpTransport from "../src/shared/McpTransport.mjs";
 import * as McpTaskStatus from "../src/shared/McpTaskStatus.mjs";
 import * as Stdlib_Option from "@rescript/runtime/lib/es6/Stdlib_Option.js";
 import * as McpContentBlock from "../src/protocol/McpContentBlock.mjs";
+import * as McpElicitResult from "../src/protocol/McpElicitResult.mjs";
 import * as McpTestBindings from "./support/McpTestBindings.mjs";
 import * as McpGetTaskResult from "../src/protocol/McpGetTaskResult.mjs";
 import * as McpPromptMessage from "../src/protocol/McpPromptMessage.mjs";
+import * as McpServerContext from "../src/server/McpServerContext.mjs";
 import * as Primitive_option from "@rescript/runtime/lib/es6/Primitive_option.js";
 import * as S$RescriptSchema from "rescript-schema/src/S.mjs";
 import * as McpCallToolParams from "../src/protocol/McpCallToolParams.mjs";
 import * as McpCallToolResult from "../src/protocol/McpCallToolResult.mjs";
 import * as McpCompleteParams from "../src/protocol/McpCompleteParams.mjs";
+import * as McpLowLevelServer from "../src/server/McpLowLevelServer.mjs";
 import * as McpRequestOptions from "../src/shared/McpRequestOptions.mjs";
 import * as McpResponseStream from "../src/shared/McpResponseStream.mjs";
 import * as McpStandardSchema from "../src/protocol/McpStandardSchema.mjs";
 import * as McpGetPromptParams from "../src/protocol/McpGetPromptParams.mjs";
 import * as McpListTasksResult from "../src/protocol/McpListTasksResult.mjs";
+import * as McpSamplingContent from "../src/protocol/McpSamplingContent.mjs";
+import * as McpSamplingMessage from "../src/protocol/McpSamplingMessage.mjs";
 import * as McpCancelTaskResult from "../src/protocol/McpCancelTaskResult.mjs";
 import * as McpCreateTaskResult from "../src/protocol/McpCreateTaskResult.mjs";
+import * as McpModelPreferences from "../src/protocol/McpModelPreferences.mjs";
 import * as McpRequestTaskStore from "../src/shared/McpRequestTaskStore.mjs";
 import * as McpResourceContents from "../src/protocol/McpResourceContents.mjs";
 import * as McpTaskResultStatus from "../src/shared/McpTaskResultStatus.mjs";
 import * as McpCreateTaskOptions from "../src/shared/McpCreateTaskOptions.mjs";
+import * as McpCreateMessageParams from "../src/protocol/McpCreateMessageParams.mjs";
+import * as McpCreateMessageResult from "../src/protocol/McpCreateMessageResult.mjs";
 import * as McpTransportSendOptions from "../src/shared/McpTransportSendOptions.mjs";
 import * as McpResourceRequestParams from "../src/protocol/McpResourceRequestParams.mjs";
+import * as McpElicitRequestUrlParams from "../src/protocol/McpElicitRequestUrlParams.mjs";
 import * as McpClientExperimentalTasks from "../src/client/McpClientExperimentalTasks.mjs";
+import * as McpElicitRequestFormParams from "../src/protocol/McpElicitRequestFormParams.mjs";
 import * as McpLowLevelServerExperimentalTasks from "../src/server/McpLowLevelServerExperimentalTasks.mjs";
 
 let typedOutputSchema = S$RescriptSchema.schema(s => ({
   message: s.m(S$RescriptSchema.string)
+}));
+
+let codeFormSchema = S$RescriptSchema.schema(s => ({
+  code: s.m(S$RescriptSchema.string)
 }));
 
 let outputSchema = McpStandardSchema.fromRescriptSchema(typedOutputSchema);
@@ -74,6 +88,26 @@ function rawStructuredMessage(result) {
 
 function stringField(value, field) {
   return Stdlib_Option.map(value[field], prim => prim);
+}
+
+function samplingContentKindString(content) {
+  let match = McpSamplingContent.kind(content);
+  if (match === "audio") {
+    return "audio";
+  } else if (match === "image") {
+    return "image";
+  } else {
+    return "text";
+  }
+}
+
+function samplingMessageKinds(message) {
+  let match = McpSamplingMessage.content(message);
+  if (match.NAME === "single") {
+    return [samplingContentKindString(match.VAL)];
+  } else {
+    return match.VAL.map(samplingContentKindString);
+  }
 }
 
 Vitest.describe("public wrapper coverage", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, () => {
@@ -387,6 +421,333 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
       "raw-task",
       "zero-task",
       "zero-raw"
+    ]);
+  });
+  Vitest.test("sampling and elicitation protocol builders preserve typed public fields", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, t => {
+    let hint = McpModelPreferences.makeHint("gpt-4.1", undefined);
+    let modelPreferences = McpModelPreferences.make([hint], 0.25, 0.5, 0.75, undefined);
+    let singleMessage = McpSamplingMessage.text("user", "hello");
+    let manyMessage = McpSamplingMessage.makeMany("assistant", [
+      McpSamplingContent.image("aW1hZ2U=", "image/png"),
+      McpSamplingContent.audio("YXVkaW8=", "audio/wav")
+    ], undefined);
+    let createMessageParams = McpCreateMessageParams.make([
+      singleMessage,
+      manyMessage
+    ], 128, Primitive_option.some(modelPreferences), "system", "allServers", 0.2, ["END"], meta, meta, undefined);
+    let createMessageResult = McpCreateMessageResult.make("gpt-4.1", "assistant", McpSamplingContent.text("reply"), "endTurn", meta, undefined);
+    let formParams = McpElicitRequestFormParams.make("Provide a code", McpStandardSchema.jsonSchemaOfRescriptSchema(codeFormSchema), meta, undefined);
+    let urlParams = McpElicitRequestUrlParams.make("Open the verifier", "elic-1", "https://example.com", meta, undefined);
+    let elicitationResult = McpElicitResult.make("accept", Object.fromEntries([[
+        "code",
+        "1234"
+      ]]), meta, undefined);
+    t.expect([
+      Stdlib_Option.map(McpModelPreferences.hints(modelPreferences), prim => prim.length),
+      McpModelPreferences.costPriority(modelPreferences),
+      McpModelPreferences.speedPriority(modelPreferences),
+      McpModelPreferences.intelligencePriority(modelPreferences),
+      McpModelPreferences.hintName(hint),
+      McpCreateMessageParams.messages(createMessageParams).map(message => [
+        McpSamplingMessage.role(message),
+        samplingMessageKinds(message)
+      ]),
+      McpCreateMessageParams.maxTokens(createMessageParams),
+      Stdlib_Option.flatMap(McpCreateMessageParams.modelPreferences(createMessageParams), preferences => Stdlib_Option.flatMap(McpModelPreferences.hints(preferences), hints => Stdlib_Option.flatMap(hints[0], McpModelPreferences.hintName))),
+      McpCreateMessageParams.systemPrompt(createMessageParams),
+      McpCreateMessageParams.includeContext(createMessageParams),
+      McpCreateMessageParams.temperature(createMessageParams),
+      McpCreateMessageParams.stopSequences(createMessageParams),
+      Stdlib_Option.flatMap(McpCreateMessageParams.metadata(createMessageParams), metadata => Stdlib_Option.map(metadata["_owner"], prim => prim)),
+      Stdlib_Option.flatMap(McpCreateMessageParams.meta(createMessageParams), metadata => Stdlib_Option.map(metadata["_owner"], prim => prim)),
+      McpCreateMessageResult.model(createMessageResult),
+      McpCreateMessageResult.role(createMessageResult),
+      McpSamplingContent.kind(McpCreateMessageResult.content(createMessageResult)),
+      McpSamplingContent.textValue(McpCreateMessageResult.content(createMessageResult)),
+      McpCreateMessageResult.stopReason(createMessageResult),
+      Stdlib_Option.flatMap(McpCreateMessageResult.meta(createMessageResult), metadata => Stdlib_Option.map(metadata["_owner"], prim => prim)),
+      McpElicitRequestFormParams.message(formParams),
+      Stdlib_Option.map(McpElicitRequestFormParams.requestedSchema(formParams)["type"], prim => prim),
+      Stdlib_Option.flatMap(McpElicitRequestFormParams.meta(formParams), metadata => Stdlib_Option.map(metadata["_owner"], prim => prim)),
+      McpElicitRequestUrlParams.message(urlParams),
+      McpElicitRequestUrlParams.elicitationId(urlParams),
+      McpElicitRequestUrlParams.url(urlParams),
+      Stdlib_Option.flatMap(McpElicitRequestUrlParams.meta(urlParams), metadata => Stdlib_Option.map(metadata["_owner"], prim => prim)),
+      McpElicitResult.action(elicitationResult),
+      Stdlib_Option.flatMap(McpElicitResult.content(elicitationResult), content => Stdlib_Option.map(content["code"], prim => prim)),
+      Stdlib_Option.flatMap(McpElicitResult.meta(elicitationResult), metadata => Stdlib_Option.map(metadata["_owner"], prim => prim))
+    ]).toEqual([
+      1,
+      0.25,
+      0.5,
+      0.75,
+      "gpt-4.1",
+      [
+        [
+          "user",
+          ["text"]
+        ],
+        [
+          "assistant",
+          [
+            "image",
+            "audio"
+          ]
+        ]
+      ],
+      128,
+      "gpt-4.1",
+      "system",
+      "allServers",
+      0.2,
+      ["END"],
+      "coverage",
+      "coverage",
+      "gpt-4.1",
+      "assistant",
+      "text",
+      "reply",
+      "endTurn",
+      "coverage",
+      "Provide a code",
+      "object",
+      "coverage",
+      "Open the verifier",
+      "elic-1",
+      "https://example.com",
+      "coverage",
+      "accept",
+      "1234",
+      "coverage"
+    ]);
+  });
+  Vitest.testAsync("typed sampling and elicitation wrappers dispatch through low-level and context objects", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, async t => {
+    let options = McpRequestOptions.make(undefined, undefined, 750, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+    let createCalls = {
+      contents: []
+    };
+    let elicitCalls = {
+      contents: []
+    };
+    let createResult = McpCreateMessageResult.make("fixture-model", "assistant", McpSamplingContent.text("typed reply"), "stopSequence", undefined, undefined);
+    let formResult = McpElicitResult.make("accept", Object.fromEntries([[
+        "code",
+        "alpha"
+      ]]), undefined, undefined);
+    let urlResult = McpElicitResult.make("decline", undefined, undefined, undefined);
+    let createRequest = McpCreateMessageParams.make([McpSamplingMessage.text("user", "hello fixture")], 64, undefined, undefined, "thisServer", undefined, undefined, undefined, meta, undefined);
+    let formParams = McpElicitRequestFormParams.make("Need form data", McpStandardSchema.jsonSchemaOfRescriptSchema(codeFormSchema), undefined, undefined);
+    let urlParams = McpElicitRequestUrlParams.make("Need URL confirmation", "elic-fixture", "https://example.com/fixture", undefined, undefined);
+    let lowLevelServer = {
+      createMessage: (params, requestOptions) => {
+        createCalls.contents = Belt_Array.concatMany([
+          [[
+              McpCreateMessageParams.maxTokens(params),
+              McpCreateMessageParams.includeContext(params),
+              requestOptions !== undefined
+            ]],
+          createCalls.contents
+        ]);
+        return Promise.resolve(createResult);
+      },
+      elicitInput: (params, requestOptions) => {
+        let mode = Stdlib_Option.getOr(Stdlib_Option.map(params["mode"], prim => prim), "form");
+        elicitCalls.contents = Belt_Array.concatMany([
+          [[
+              mode,
+              requestOptions !== undefined
+            ]],
+          elicitCalls.contents
+        ]);
+        return Promise.resolve(mode === "url" ? urlResult : formResult);
+      }
+    };
+    let abortController = new AbortController();
+    let context = {
+      mcpReq: {
+        id: 1,
+        method: "tools/call",
+        signal: abortController.signal,
+        requestSampling: (params, requestOptions) => {
+          createCalls.contents = Belt_Array.concatMany([
+            [[
+                McpCreateMessageParams.maxTokens(params),
+                McpCreateMessageParams.includeContext(params),
+                requestOptions !== undefined
+              ]],
+            createCalls.contents
+          ]);
+          return Promise.resolve(createResult);
+        },
+        elicitInput: (params, requestOptions) => {
+          let mode = Stdlib_Option.getOr(Stdlib_Option.map(params["mode"], prim => prim), "form");
+          elicitCalls.contents = Belt_Array.concatMany([
+            [[
+                mode,
+                requestOptions !== undefined
+              ]],
+            elicitCalls.contents
+          ]);
+          return Promise.resolve(mode === "url" ? urlResult : formResult);
+        }
+      }
+    };
+    let typedCreate = await McpLowLevelServer.createMessage(lowLevelServer, createRequest);
+    let typedCreateWithOptions = await McpLowLevelServer.createMessageWithOptions(lowLevelServer, createRequest, options);
+    let rawCreate = await McpLowLevelServer.createMessageRaw(lowLevelServer, createRequest);
+    let rawCreateWithOptions = await McpLowLevelServer.createMessageRawWithOptions(lowLevelServer, createRequest, options);
+    let typedForm = await McpLowLevelServer.elicitFormInput(lowLevelServer, formParams);
+    let typedFormWithOptions = await McpLowLevelServer.elicitFormInputWithOptions(lowLevelServer, formParams, options);
+    let typedUrl = await McpLowLevelServer.elicitUrlInput(lowLevelServer, urlParams);
+    let typedUrlWithOptions = await McpLowLevelServer.elicitUrlInputWithOptions(lowLevelServer, urlParams, options);
+    let rawElicit = await McpLowLevelServer.elicitInputRaw(lowLevelServer, formParams);
+    let rawElicitWithOptions = await McpLowLevelServer.elicitInputRawWithOptions(lowLevelServer, urlParams, options);
+    let contextTypedCreate = await McpServerContext.requestSampling(context, createRequest);
+    let contextTypedCreateWithOptions = await McpServerContext.requestSamplingWithOptions(context, createRequest, options);
+    let contextRawCreate = await McpServerContext.requestSamplingRaw(context, createRequest);
+    let contextRawCreateWithOptions = await McpServerContext.requestSamplingRawWithOptions(context, createRequest, options);
+    let contextTypedForm = await McpServerContext.elicitFormInput(context, formParams);
+    let contextTypedFormWithOptions = await McpServerContext.elicitFormInputWithOptions(context, formParams, options);
+    let contextTypedUrl = await McpServerContext.elicitUrlInput(context, urlParams);
+    let contextTypedUrlWithOptions = await McpServerContext.elicitUrlInputWithOptions(context, urlParams, options);
+    let contextRawElicit = await McpServerContext.elicitInputRaw(context, formParams);
+    let contextRawElicitWithOptions = await McpServerContext.elicitInputRawWithOptions(context, urlParams, options);
+    return t.expect([
+      McpSamplingContent.textValue(McpCreateMessageResult.content(typedCreate)),
+      McpCreateMessageResult.stopReason(typedCreateWithOptions),
+      stringField(rawCreate, "model"),
+      stringField(rawCreateWithOptions, "model"),
+      McpElicitResult.action(typedForm),
+      Stdlib_Option.flatMap(McpElicitResult.content(typedFormWithOptions), content => Stdlib_Option.map(content["code"], prim => prim)),
+      McpElicitResult.action(typedUrl),
+      McpElicitResult.action(typedUrlWithOptions),
+      stringField(rawElicit, "action"),
+      stringField(rawElicitWithOptions, "action"),
+      McpSamplingContent.textValue(McpCreateMessageResult.content(contextTypedCreate)),
+      McpCreateMessageResult.stopReason(contextTypedCreateWithOptions),
+      stringField(contextRawCreate, "model"),
+      stringField(contextRawCreateWithOptions, "model"),
+      McpElicitResult.action(contextTypedForm),
+      Stdlib_Option.flatMap(McpElicitResult.content(contextTypedFormWithOptions), content => Stdlib_Option.map(content["code"], prim => prim)),
+      McpElicitResult.action(contextTypedUrl),
+      McpElicitResult.action(contextTypedUrlWithOptions),
+      stringField(contextRawElicit, "action"),
+      stringField(contextRawElicitWithOptions, "action"),
+      createCalls.contents,
+      elicitCalls.contents
+    ]).toEqual([
+      "typed reply",
+      "stopSequence",
+      "fixture-model",
+      "fixture-model",
+      "accept",
+      "alpha",
+      "decline",
+      "decline",
+      "accept",
+      "decline",
+      "typed reply",
+      "stopSequence",
+      "fixture-model",
+      "fixture-model",
+      "accept",
+      "alpha",
+      "decline",
+      "decline",
+      "accept",
+      "decline",
+      [
+        [
+          64,
+          "thisServer",
+          true
+        ],
+        [
+          64,
+          "thisServer",
+          false
+        ],
+        [
+          64,
+          "thisServer",
+          true
+        ],
+        [
+          64,
+          "thisServer",
+          false
+        ],
+        [
+          64,
+          "thisServer",
+          true
+        ],
+        [
+          64,
+          "thisServer",
+          false
+        ],
+        [
+          64,
+          "thisServer",
+          true
+        ],
+        [
+          64,
+          "thisServer",
+          false
+        ]
+      ],
+      [
+        [
+          "url",
+          true
+        ],
+        [
+          "form",
+          false
+        ],
+        [
+          "url",
+          true
+        ],
+        [
+          "url",
+          false
+        ],
+        [
+          "form",
+          true
+        ],
+        [
+          "form",
+          false
+        ],
+        [
+          "url",
+          true
+        ],
+        [
+          "form",
+          false
+        ],
+        [
+          "url",
+          true
+        ],
+        [
+          "url",
+          false
+        ],
+        [
+          "form",
+          true
+        ],
+        [
+          "form",
+          false
+        ]
+      ]
     ]);
   });
   Vitest.testAsync("task-store transport and response-stream wrappers dispatch through runtime objects", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, async t => {
@@ -818,11 +1179,14 @@ export {
   S,
   Json,
   typedOutputSchema,
+  codeFormSchema,
   outputSchema,
   meta,
   encodeCursor,
   encodePresence,
   rawStructuredMessage,
   stringField,
+  samplingContentKindString,
+  samplingMessageKinds,
 }
 /* typedOutputSchema Not a pure module */

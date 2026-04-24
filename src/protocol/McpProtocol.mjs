@@ -9,6 +9,10 @@ let CallToolResult;
 
 let CancelTaskResult;
 
+let CreateMessageParams;
+
+let CreateMessageResult;
+
 let CompleteParams;
 
 let CompleteResult;
@@ -16,6 +20,12 @@ let CompleteResult;
 let ContentBlock;
 
 let CreateTaskResult;
+
+let ElicitRequestFormParams;
+
+let ElicitRequestUrlParams;
+
+let ElicitResult;
 
 let EmptyResult;
 
@@ -57,6 +67,8 @@ let LoggingMessageParams;
 
 let Method;
 
+let ModelPreferences;
+
 let ResourceRequestParams;
 
 let ResourceContents;
@@ -71,6 +83,10 @@ let RequestOptions;
 
 let StandardSchema;
 
+let SamplingContent;
+
+let SamplingMessage;
+
 let Transport;
 
 let TransportSendOptions;
@@ -84,10 +100,15 @@ export {
   CallToolParams,
   CallToolResult,
   CancelTaskResult,
+  CreateMessageParams,
+  CreateMessageResult,
   CompleteParams,
   CompleteResult,
   ContentBlock,
   CreateTaskResult,
+  ElicitRequestFormParams,
+  ElicitRequestUrlParams,
+  ElicitResult,
   EmptyResult,
   GetPromptParams,
   GetPromptResult,
@@ -108,6 +129,7 @@ export {
   ReadResourceResult,
   LoggingMessageParams,
   Method,
+  ModelPreferences,
   ResourceRequestParams,
   ResourceContents,
   ResourceUpdatedParams,
@@ -115,6 +137,8 @@ export {
   RequestInfo,
   RequestOptions,
   StandardSchema,
+  SamplingContent,
+  SamplingMessage,
   Transport,
   TransportSendOptions,
   ToolSchema,

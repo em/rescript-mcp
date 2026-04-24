@@ -72,12 +72,36 @@ function sendPromptListChanged(prim) {
   return prim.sendPromptListChanged();
 }
 
+function createMessage(prim0, prim1) {
+  return prim0.createMessage(prim1);
+}
+
+function createMessageWithOptions(prim0, prim1, prim2) {
+  return prim0.createMessage(prim1, prim2);
+}
+
 function createMessageRaw(prim0, prim1) {
   return prim0.createMessage(prim1);
 }
 
 function createMessageRawWithOptions(prim0, prim1, prim2) {
   return prim0.createMessage(prim1, prim2);
+}
+
+function elicitFormInput(prim0, prim1) {
+  return prim0.elicitInput(prim1);
+}
+
+function elicitFormInputWithOptions(prim0, prim1, prim2) {
+  return prim0.elicitInput(prim1, prim2);
+}
+
+function elicitUrlInput(prim0, prim1) {
+  return prim0.elicitInput(prim1);
+}
+
+function elicitUrlInputWithOptions(prim0, prim1, prim2) {
+  return prim0.elicitInput(prim1, prim2);
 }
 
 function elicitInputRaw(prim0, prim1) {
@@ -113,8 +137,14 @@ export {
   sendResourceListChanged,
   sendToolListChanged,
   sendPromptListChanged,
+  createMessage,
+  createMessageWithOptions,
   createMessageRaw,
   createMessageRawWithOptions,
+  elicitFormInput,
+  elicitFormInputWithOptions,
+  elicitUrlInput,
+  elicitUrlInputWithOptions,
   elicitInputRaw,
   elicitInputRawWithOptions,
   listRoots,

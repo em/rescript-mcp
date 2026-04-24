@@ -13,6 +13,7 @@ import * as McpJsonValue from "../src/protocol/McpJsonValue.mjs";
 import * as Stdlib_Option from "@rescript/runtime/lib/es6/Stdlib_Option.js";
 import * as McpEmptyResult from "../src/protocol/McpEmptyResult.mjs";
 import * as McpContentBlock from "../src/protocol/McpContentBlock.mjs";
+import * as McpElicitResult from "../src/protocol/McpElicitResult.mjs";
 import * as McpTestBindings from "./support/McpTestBindings.mjs";
 import * as McpClientOptions from "../src/client/McpClientOptions.mjs";
 import * as McpPromptMessage from "../src/protocol/McpPromptMessage.mjs";
@@ -26,11 +27,16 @@ import * as McpRequestOptions from "../src/shared/McpRequestOptions.mjs";
 import * as McpStandardSchema from "../src/protocol/McpStandardSchema.mjs";
 import * as McpGetPromptParams from "../src/protocol/McpGetPromptParams.mjs";
 import * as McpGetPromptResult from "../src/protocol/McpGetPromptResult.mjs";
+import * as McpSamplingContent from "../src/protocol/McpSamplingContent.mjs";
+import * as McpSamplingMessage from "../src/protocol/McpSamplingMessage.mjs";
 import * as McpResourceContents from "../src/protocol/McpResourceContents.mjs";
 import * as McpResourceTemplate from "../src/server/McpResourceTemplate.mjs";
 import * as McpReadResourceResult from "../src/protocol/McpReadResourceResult.mjs";
+import * as McpCreateMessageParams from "../src/protocol/McpCreateMessageParams.mjs";
+import * as McpCreateMessageResult from "../src/protocol/McpCreateMessageResult.mjs";
 import * as McpLoggingMessageParams from "../src/protocol/McpLoggingMessageParams.mjs";
 import * as McpResourceRequestParams from "../src/protocol/McpResourceRequestParams.mjs";
+import * as McpElicitRequestFormParams from "../src/protocol/McpElicitRequestFormParams.mjs";
 
 let echoArgsSchema = S$RescriptSchema.schema(s => ({
   message: s.m(S$RescriptSchema.string)
@@ -45,6 +51,10 @@ let echoOutputSchema = S$RescriptSchema.schema(s => ({
 
 let promptArgsSchema = S$RescriptSchema.schema(s => ({
   topic: s.m(S$RescriptSchema.string)
+}));
+
+let codeFormSchema = S$RescriptSchema.schema(s => ({
+  code: s.m(S$RescriptSchema.string)
 }));
 
 function notificationStringField(notification, fieldName) {
@@ -98,33 +108,11 @@ Vitest.describe("authoring lifecycle roundtrip", undefined, undefined, undefined
   let echoSchema = McpStandardSchema.fromRescriptSchema(echoArgsSchema);
   let echoOutputStandardSchema = McpStandardSchema.fromRescriptSchema(echoOutputSchema);
   let promptSchema = McpStandardSchema.fromRescriptSchema(promptArgsSchema);
-  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", (_request, _ctx) => Promise.resolve(Object.fromEntries([
-    [
-      "model",
-      "sample-model"
-    ],
-    [
-      "role",
-      "assistant"
-    ],
-    [
-      "content",
-      McpTestBindings.makeTextContent("sampled-from-client")
-    ]
-  ])));
-  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", (_request, _ctx) => Promise.resolve(Object.fromEntries([
-    [
-      "action",
-      "accept"
-    ],
-    [
-      "content",
-      Object.fromEntries([[
-          "code",
-          "42"
-        ]])
-    ]
-  ])));
+  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", (_request, _ctx) => Promise.resolve(McpCreateMessageResult.make("sample-model", "assistant", McpSamplingContent.text("sampled-from-client"), undefined, undefined, undefined)));
+  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", (_request, _ctx) => Promise.resolve(McpElicitResult.make("accept", Object.fromEntries([[
+      "code",
+      "42"
+    ]]), undefined, undefined)));
   McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", (_request, _ctx) => Promise.resolve(Object.fromEntries([[
       "roots",
       [Object.fromEntries([[
@@ -140,11 +128,11 @@ Vitest.describe("authoring lifecycle roundtrip", undefined, undefined, undefined
     return Promise.resolve();
   });
   let toolHandle = McpServer.registerTool(server, "echo", McpTool.makeConfig("Echo", undefined, Primitive_option.some(echoSchema), echoOutputStandardSchema, undefined, undefined, undefined), async (args, ctx) => {
-    let sampling = await McpServerContext.requestSamplingRawWithOptions(ctx, McpTestBindings.makeSamplingRequestParams("tool request", 32), timeoutOptions);
-    let elicitation = await McpServerContext.elicitInputRawWithOptions(ctx, McpTestBindings.makeCodeElicitationRequestParams("Provide a code"), timeoutOptions);
+    let sampling = await McpServerContext.requestSamplingWithOptions(ctx, McpCreateMessageParams.make([McpSamplingMessage.text("user", "tool request")], 32, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined), timeoutOptions);
+    let elicitation = await McpServerContext.elicitFormInputWithOptions(ctx, McpElicitRequestFormParams.make("Provide a code", McpStandardSchema.jsonSchemaOfRescriptSchema(codeFormSchema), undefined, undefined), timeoutOptions);
     let roots = await McpServerContext.sendRelatedRequestRawWithOptions(ctx, "rootsList", Object.fromEntries([]), timeoutOptions);
-    let sampledText = sampling.content.text;
-    let code = Stdlib_Option.getOr(Stdlib_Option.flatMap(Primitive_option.fromNullable(elicitation.content), content => Stdlib_Option.map(content["code"], prim => prim)), "missing");
+    let sampledText = Stdlib_Option.getOr(McpSamplingContent.textValue(McpCreateMessageResult.content(sampling)), "missing");
+    let code = Stdlib_Option.getOr(Stdlib_Option.flatMap(McpElicitResult.content(elicitation), content => Stdlib_Option.map(content["code"], prim => prim)), "missing");
     let root = Stdlib_Option.getOr(roots.roots.map(root => root.uri)[0], "missing-root");
     await McpServerContext.sendRelatedNotificationRaw(ctx, "message", Object.fromEntries([
       [
@@ -334,6 +322,7 @@ export {
   echoArgsSchema,
   echoOutputSchema,
   promptArgsSchema,
+  codeFormSchema,
   notificationStringField,
   variableId,
 }
