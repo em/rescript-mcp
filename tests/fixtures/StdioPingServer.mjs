@@ -5,7 +5,7 @@ import * as McpImplementation from "../../src/core/McpImplementation.mjs";
 import * as McpLowLevelServer from "../../src/server/McpLowLevelServer.mjs";
 import * as McpStdioServerTransport from "../../src/transports/McpStdioServerTransport.mjs";
 
-let _server = McpLowLevelServer.makeWithOptions(McpImplementation.make("stdio-test-server", "1.0.0"), McpServerOptions.make(undefined, "stdio test server", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
+let _server = McpLowLevelServer.makeWithOptions(McpImplementation.make("stdio-test-server", "1.0.0"), McpServerOptions.make(undefined, "stdio test server", undefined, undefined, undefined, undefined, undefined, undefined));
 
 let _transport = McpStdioServerTransport.make();
 

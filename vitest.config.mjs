@@ -5,7 +5,12 @@ export default {
     coverage: {
       provider: "v8",
       include: ["src/**/*.mjs"],
-      exclude: ["src/Mcp.mjs", "src/**/Mcp*.mjs"],
+      thresholds: {
+        branches: 80,
+        functions: 80,
+        lines: 80,
+        statements: 80,
+      },
     },
   },
 }

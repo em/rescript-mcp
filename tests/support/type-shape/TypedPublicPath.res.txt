@@ -1,0 +1,83 @@
+module S = RescriptSchema.S
+
+type echoInput = {message: string}
+type echoOutput = {echoed: string}
+
+let echoInputSchema =
+  S.object((schema): echoInput => {
+    message: schema.field("message", S.string),
+  })->McpStandardSchema.fromRescriptSchema
+
+let echoOutputSchema =
+  S.object((schema): echoOutput => {
+    echoed: schema.field("echoed", S.string),
+  })->McpStandardSchema.fromRescriptSchema
+
+let implementation = McpImplementation.make(~name="type-shape", ~version="1.0.0")
+let server = McpServer.make(implementation)
+let client = McpClient.make(implementation)
+
+let typedResult = (message: string) =>
+  McpCallToolResult.make(~content=[McpContentBlock.text(message)], ~structuredContent={echoed: message}, ())
+
+let _tool =
+  server->McpServer.registerTool(
+    "echo",
+    McpTool.makeConfig(~inputSchema=echoInputSchema, ~outputSchema=echoOutputSchema, ()),
+    (args, _ctx) => Promise.resolve(typedResult(args.message)),
+  )
+
+let _taskTool =
+  server
+  ->McpServer.experimentalTasks
+  ->McpServerExperimentalTasks.registerToolTask(
+      "echo-task",
+      McpTaskTool.makeConfig(~inputSchema=echoInputSchema, ~outputSchema=echoOutputSchema, ()),
+      McpTaskTool.makeHandler(
+        ~createTask=((_args, _ctx) => Promise.resolve(JsError.throwWithMessage("unused"))),
+        ~getTask=((_args, _ctx) => Promise.resolve(JsError.throwWithMessage("unused"))),
+        ~getTaskResult=((args, _ctx) => Promise.resolve(typedResult(args.message))),
+        (),
+      ),
+    )
+
+let _clientResult: promise<McpCallToolResult.t<echoOutput>> =
+  client->McpClient.callTool(McpCallToolParams.make(~name="echo", ()), echoOutputSchema)
+
+let _clientStructuredContent: promise<option<string>> =
+  _clientResult->Promise.then(result =>
+    Promise.resolve(result->McpCallToolResult.structuredContent->Option.map(output => output.echoed))
+  )
+
+let store = McpTaskStore.makeInMemory()
+let _stored =
+  store->McpTaskStore.storeTaskResult("task-1", #completed, typedResult("stored"), echoOutputSchema)
+let _retrieved: promise<McpCallToolResult.t<echoOutput>> =
+  store->McpTaskStore.getTaskResult("task-1", echoOutputSchema)
+
+let uriTemplate = McpUriTemplate.make("memo://{id}{/tags*}")
+let _expanded =
+  uriTemplate->McpUriTemplate.expand(
+    Dict.fromArray([
+      ("id", McpUriTemplate.Single("alpha")),
+      ("tags", McpUriTemplate.Multiple(["one", "two"])),
+    ]),
+  )
+
+let _resourceTemplate =
+  McpResourceTemplate.makeWithUriTemplate(
+    uriTemplate,
+    McpResourceTemplate.makeCallbacks(~list=None, ()),
+  )
+
+let _readCallback: McpResourceTemplate.readCallback = (_uri, variables, _ctx) => {
+  let text =
+    switch variables->Dict.get("id") {
+    | Some(McpUriTemplate.Single(value)) => value
+    | Some(McpUriTemplate.Multiple(values)) => values->Array.get(0)->Option.getOr("missing")
+    | None => "missing"
+    }
+  Promise.resolve(
+    McpReadResourceResult.make([McpResourceContents.text(~uri="memo://alpha", ~text, ())]),
+  )
+}

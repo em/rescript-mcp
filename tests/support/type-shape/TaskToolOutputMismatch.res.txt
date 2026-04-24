@@ -1,0 +1,40 @@
+module S = RescriptSchema.S
+
+type echoInput = {message: string}
+type echoOutput = {echoed: string}
+type wrongOutput = {count: int}
+
+let echoInputSchema =
+  S.object((schema): echoInput => {
+    message: schema.field("message", S.string),
+  })->McpStandardSchema.fromRescriptSchema
+
+let echoOutputSchema =
+  S.object((schema): echoOutput => {
+    echoed: schema.field("echoed", S.string),
+  })->McpStandardSchema.fromRescriptSchema
+
+let implementation = McpImplementation.make(~name="task-output-mismatch", ~version="1.0.0")
+let server = McpServer.make(implementation)
+let badOutput: wrongOutput = {count: 1}
+
+let _taskTool =
+  server
+  ->McpServer.experimentalTasks
+  ->McpServerExperimentalTasks.registerToolTask(
+      "echo-task",
+      McpTaskTool.makeConfig(~inputSchema=echoInputSchema, ~outputSchema=echoOutputSchema, ()),
+      McpTaskTool.makeHandler(
+        ~createTask=((_args, _ctx) => Promise.resolve(JsError.throwWithMessage("unused"))),
+        ~getTask=((_args, _ctx) => Promise.resolve(JsError.throwWithMessage("unused"))),
+        ~getTaskResult=((_args, _ctx) =>
+          Promise.resolve(
+            McpCallToolResult.make(
+              ~content=[McpContentBlock.text("bad")],
+              ~structuredContent=badOutput,
+              (),
+            ),
+          )),
+        (),
+      ),
+    )

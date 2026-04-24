@@ -1,0 +1,33 @@
+module S = RescriptSchema.S
+
+type echoInput = {message: string}
+type echoOutput = {echoed: string}
+type wrongOutput = {count: int}
+
+let echoInputSchema =
+  S.object((schema): echoInput => {
+    message: schema.field("message", S.string),
+  })->McpStandardSchema.fromRescriptSchema
+
+let echoOutputSchema =
+  S.object((schema): echoOutput => {
+    echoed: schema.field("echoed", S.string),
+  })->McpStandardSchema.fromRescriptSchema
+
+let implementation = McpImplementation.make(~name="tool-output-mismatch", ~version="1.0.0")
+let server = McpServer.make(implementation)
+let badOutput: wrongOutput = {count: 1}
+
+let _tool =
+  server->McpServer.registerTool(
+    "echo",
+    McpTool.makeConfig(~inputSchema=echoInputSchema, ~outputSchema=echoOutputSchema, ()),
+    (_args, _ctx) =>
+      Promise.resolve(
+        McpCallToolResult.make(
+          ~content=[McpContentBlock.text("bad")],
+          ~structuredContent=badOutput,
+          (),
+        ),
+      ),
+  )
