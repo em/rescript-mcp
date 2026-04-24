@@ -12,8 +12,9 @@ function storeTaskResultRaw(store, taskId, status, result) {
   return store.storeTaskResult(taskId, McpTaskResultStatus.toString(status), result);
 }
 
-function getTaskResult(store, taskId, outputSchema) {
-  return store.getTaskResult(taskId).then(result => Promise.resolve(McpCallToolResultInternal.fromRaw(result, outputSchema)));
+async function getTaskResult(store, taskId, outputSchema) {
+  let result = await store.getTaskResult(taskId);
+  return McpCallToolResultInternal.fromRaw(result, outputSchema);
 }
 
 function updateTaskStatus(store, taskId, status, statusMessage) {

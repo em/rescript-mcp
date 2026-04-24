@@ -27,13 +27,11 @@ let _tool =
       ~outputSchema=echoOutputSchema->McpStandardSchema.fromRescriptSchema,
       (),
     ),
-    (args, _ctx) =>
-      Promise.resolve(
-        McpCallToolResult.make(
-          ~content=[McpContentBlock.text("echo:" ++ args.message)],
-          ~structuredContent={echoed: args.message},
-          (),
-        ),
+    async (args, _ctx) =>
+      McpCallToolResult.make(
+        ~content=[McpContentBlock.text("echo:" ++ args.message)],
+        ~structuredContent={echoed: args.message},
+        (),
       ),
   )
 
@@ -46,13 +44,11 @@ let _prompt =
       ~argsSchema=promptArgsSchema->McpStandardSchema.fromRescriptSchema,
       (),
     ),
-    (args, _ctx) =>
-      Promise.resolve(
-        McpGetPromptResult.make(
-          ~messages=[McpPromptMessage.text(~role=#user, ~text="Review " ++ args.topic)],
-          ~description="Review prompt",
-          (),
-        ),
+    async (args, _ctx) =>
+      McpGetPromptResult.make(
+        ~messages=[McpPromptMessage.text(~role=#user, ~text="Review " ++ args.topic)],
+        ~description="Review prompt",
+        (),
       ),
   )
 
@@ -66,17 +62,15 @@ let _resource =
       ~mimeType="application/json",
       (),
     ),
-    (uri, _ctx) =>
-      Promise.resolve(
-        McpReadResourceResult.make([
-          McpResourceContents.text(
-            ~uri=Webapi.Url.href(uri),
-            ~text="{\"ok\":true}",
-            ~mimeType="application/json",
-            (),
-          ),
-        ]),
-      ),
+    async (uri, _ctx) =>
+      McpReadResourceResult.make([
+        McpResourceContents.text(
+          ~uri=Webapi.Url.href(uri),
+          ~text="{\"ok\":true}",
+          ~mimeType="application/json",
+          (),
+        ),
+      ]),
   )
 
 let _transport = McpStdioServerTransport.make()

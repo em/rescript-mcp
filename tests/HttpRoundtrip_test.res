@@ -15,13 +15,15 @@ describe("streamable http roundtrip", () => {
     await McpTestBindings.connectLowLevelServer(server, transport)
 
     let httpServer = Http.createServer((req, res) => {
-      ignore(
-        McpTestBindings.nodeHandleRequest(transport, req, res)->Promise.catch(_error => {
+      ignore((async () => {
+        try {
+          await McpTestBindings.nodeHandleRequest(transport, req, res)
+        } catch {
+        | _error =>
           res->Http.ServerResponse.setStatusCode(500)
           res->Http.ServerResponse.endWithData(Buffer.fromString("transport error"))
-          Promise.resolve()
-        }),
-      )
+        }
+      })())
     })
     let address = await TestSupport.listenHttpServer(httpServer)
     let clientTransport = McpTestBindings.makeStreamableHttpClientTransport(

@@ -458,13 +458,11 @@ describe("public wrapper coverage", () => {
         ~name="echo",
         ~outputSchema,
         ~_meta=meta,
-        ~callback=((value: string), _ctx) =>
-          Promise.resolve(
-            McpCallToolResult.make(
-              ~content=[McpContentBlock.text(`typed:${value}`)],
-              ~structuredContent={message: value},
-              (),
-            ),
+        ~callback=async ((value: string), _ctx) =>
+          McpCallToolResult.make(
+            ~content=[McpContentBlock.text(`typed:${value}`)],
+            ~structuredContent={message: value},
+            (),
           ),
         (),
       )
@@ -472,39 +470,33 @@ describe("public wrapper coverage", () => {
       McpTool.makeUpdates0(
         ~name="echo0",
         ~outputSchema,
-        ~callback=(_ctx =>
-          Promise.resolve(
-            McpCallToolResult.make(
-              ~content=[McpContentBlock.text("typed:zero")],
-              ~structuredContent={message: "zero"},
-              (),
-            ),
+        ~callback=(async _ctx =>
+          McpCallToolResult.make(
+            ~content=[McpContentBlock.text("typed:zero")],
+            ~structuredContent={message: "zero"},
+            (),
           )),
         (),
       )
     let rawUpdates =
       McpTool.makeRawUpdates(
         ~name="raw",
-        ~callback=((value: string), _ctx) =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(
-              ~content=[McpContentBlock.text(`raw:${value}`)],
-              ~structuredContent=Dict.fromArray([("message", Json.string(value))]),
-              (),
-            ),
+        ~callback=async ((value: string), _ctx) =>
+          McpCallToolResult.makeRaw(
+            ~content=[McpContentBlock.text(`raw:${value}`)],
+            ~structuredContent=Dict.fromArray([("message", Json.string(value))]),
+            (),
           ),
         (),
       )
     let rawUpdates0 =
       McpTool.makeRawUpdates0(
         ~name="raw0",
-        ~callback=(_ctx =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(
-              ~content=[McpContentBlock.text("raw:zero")],
-              ~structuredContent=Dict.fromArray([("message", Json.string("zero"))]),
-              (),
-            ),
+        ~callback=(async _ctx =>
+          McpCallToolResult.makeRaw(
+            ~content=[McpContentBlock.text("raw:zero")],
+            ~structuredContent=Dict.fromArray([("message", Json.string("zero"))]),
+            (),
           )),
         (),
       )
@@ -540,63 +532,55 @@ describe("public wrapper coverage", () => {
     let rawTaskToolConfig = McpTaskTool.makeRawConfig(~title="Raw Task Echo", ~execution, ~_meta=meta, ())
     let taskHandler =
       McpTaskTool.makeHandler(
-        ~createTask=((_value: string, _ctx) =>
-          Promise.resolve(McpCreateTaskResult.make(~task=workingTask, ()))
+        ~createTask=(async (_value: string, _ctx) =>
+          McpCreateTaskResult.make(~task=workingTask, ())
         ),
-        ~getTask=((_value: string, _ctx) => Promise.resolve(McpGetTaskResult.ofTask(workingTask))),
-        ~getTaskResult=((value: string, _ctx) =>
-          Promise.resolve(
-            McpCallToolResult.make(
-              ~content=[McpContentBlock.text(`task:${value}`)],
-              ~structuredContent={message: value},
-              (),
-            ),
+        ~getTask=(async (_value: string, _ctx) => McpGetTaskResult.ofTask(workingTask)),
+        ~getTaskResult=(async (value: string, _ctx) =>
+          McpCallToolResult.make(
+            ~content=[McpContentBlock.text(`task:${value}`)],
+            ~structuredContent={message: value},
+            (),
           )
         ),
         (),
       )
     let rawTaskHandler =
       McpTaskTool.makeRawHandler(
-        ~createTask=((_value: string, _ctx) =>
-          Promise.resolve(McpCreateTaskResult.make(~task=workingTask, ()))
+        ~createTask=(async (_value: string, _ctx) =>
+          McpCreateTaskResult.make(~task=workingTask, ())
         ),
-        ~getTask=((_value: string, _ctx) => Promise.resolve(McpGetTaskResult.ofTask(workingTask))),
-        ~getTaskResult=((value: string, _ctx) =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(
-              ~content=[McpContentBlock.text(`raw-task:${value}`)],
-              ~structuredContent=Dict.fromArray([("message", Json.string(value))]),
-              (),
-            ),
+        ~getTask=(async (_value: string, _ctx) => McpGetTaskResult.ofTask(workingTask)),
+        ~getTaskResult=(async (value: string, _ctx) =>
+          McpCallToolResult.makeRaw(
+            ~content=[McpContentBlock.text(`raw-task:${value}`)],
+            ~structuredContent=Dict.fromArray([("message", Json.string(value))]),
+            (),
           )
         ),
         (),
       )
     let taskHandler0 =
       McpTaskTool.makeHandler0(
-        ~createTask=(_ctx => Promise.resolve(McpCreateTaskResult.make(~task=workingTask, ()))),
-        ~getTask=(_ctx => Promise.resolve(McpGetTaskResult.ofTask(workingTask))),
-        ~getTaskResult=(_ctx =>
-          Promise.resolve(
-            McpCallToolResult.make(
-              ~content=[McpContentBlock.text("task:zero")],
-              ~structuredContent={message: "zero-task"},
-              (),
-            ),
+        ~createTask=(async _ctx => McpCreateTaskResult.make(~task=workingTask, ())),
+        ~getTask=(async _ctx => McpGetTaskResult.ofTask(workingTask)),
+        ~getTaskResult=(async _ctx =>
+          McpCallToolResult.make(
+            ~content=[McpContentBlock.text("task:zero")],
+            ~structuredContent={message: "zero-task"},
+            (),
           )),
         (),
       )
     let rawTaskHandler0 =
       McpTaskTool.makeRawHandler0(
-        ~createTask=(_ctx => Promise.resolve(McpCreateTaskResult.make(~task=workingTask, ()))),
-        ~getTask=(_ctx => Promise.resolve(McpGetTaskResult.ofTask(workingTask))),
-        ~getTaskResult=(_ctx =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(
-              ~content=[McpContentBlock.text("raw-task:zero")],
-              ~structuredContent=Dict.fromArray([("message", Json.string("zero-raw"))]),
-              (),
-            ),
+        ~createTask=(async _ctx => McpCreateTaskResult.make(~task=workingTask, ())),
+        ~getTask=(async _ctx => McpGetTaskResult.ofTask(workingTask)),
+        ~getTaskResult=(async _ctx =>
+          McpCallToolResult.makeRaw(
+            ~content=[McpContentBlock.text("raw-task:zero")],
+            ~structuredContent=Dict.fromArray([("message", Json.string("zero-raw"))]),
+            (),
           )),
         (),
       )
@@ -865,13 +849,13 @@ describe("public wrapper coverage", () => {
             ),
             ...createCalls.contents,
           ]
-          Promise.resolve(createResult)
+          (async () => createResult)()
         })->McpTestBindings.toUnknown,
         ~elicitInput=((params: unknown, requestOptions: option<McpRequestOptions.t>) => {
           let value = params->McpTestBindings.toDict
           let mode = value->Dict.get("mode")->Option.map(McpTestBindings.unknownToString)->Option.getOr("form")
           elicitCalls := [(mode, requestOptions != None), ...elicitCalls.contents]
-          Promise.resolve(mode == "url" ? urlResult : formResult)
+          (async () => mode == "url" ? urlResult : formResult)()
         })->McpTestBindings.toUnknown,
         (),
       )
@@ -891,13 +875,13 @@ describe("public wrapper coverage", () => {
               ),
               ...createCalls.contents,
             ]
-            Promise.resolve(createResult)
+            (async () => createResult)()
           })->McpTestBindings.toUnknown,
           ~elicitInput=((params: unknown, requestOptions: option<McpRequestOptions.t>) => {
             let value = params->McpTestBindings.toDict
             let mode = value->Dict.get("mode")->Option.map(McpTestBindings.unknownToString)->Option.getOr("form")
             elicitCalls := [(mode, requestOptions != None), ...elicitCalls.contents]
-            Promise.resolve(mode == "url" ? urlResult : formResult)
+            (async () => mode == "url" ? urlResult : formResult)()
           })->McpTestBindings.toUnknown,
           (),
         ),
@@ -1045,30 +1029,27 @@ describe("public wrapper coverage", () => {
     let listCursors = ref([])
     let store =
       makeRequestTaskStoreFixture(
-        ~createTask=((_params: McpCreateTaskOptions.t) => Promise.resolve(storeTask))->McpTestBindings.toUnknown,
-        ~getTask=((_taskId: string) => Promise.resolve(storeTask))->McpTestBindings.toUnknown,
-        ~storeTaskResult=((_taskId: string, status: string, result: unknown) => {
+        ~createTask=((async (_params: McpCreateTaskOptions.t) => storeTask))->McpTestBindings.toUnknown,
+        ~getTask=((async (_taskId: string) => storeTask))->McpTestBindings.toUnknown,
+        ~storeTaskResult=((async (_taskId: string, status: string, result: unknown) => {
           storedStatuses := [status, ...storedStatuses.contents]
           storedMessages := [
             result->McpTestBindings.rawCallToolResult->rawStructuredMessage->Option.getOr("missing"),
             ...storedMessages.contents,
           ]
-          Promise.resolve()
-        })->McpTestBindings.toUnknown,
-        ~getTaskResult=((_taskId: string) =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(
-              ~content=[McpContentBlock.text("stored")],
-              ~structuredContent=Dict.fromArray([("message", Json.string("stored"))]),
-              (),
-            ),
-          ))->McpTestBindings.toUnknown,
-        ~updateTaskStatus=((_taskId: string, _status: string, _statusMessage: string) =>
-          Promise.resolve()
-        )->McpTestBindings.toUnknown,
+        }))->McpTestBindings.toUnknown,
+        ~getTaskResult=((async (_taskId: string) =>
+          McpCallToolResult.makeRaw(
+            ~content=[McpContentBlock.text("stored")],
+            ~structuredContent=Dict.fromArray([("message", Json.string("stored"))]),
+            (),
+          )))->McpTestBindings.toUnknown,
+        ~updateTaskStatus=((async (_taskId: string, _status: string, _statusMessage: string) =>
+          ()
+        ))->McpTestBindings.toUnknown,
         ~listTasks=((cursor: option<string>) => {
           listCursors := [cursor->encodeCursor, ...listCursors.contents]
-          Promise.resolve(listResult)
+          (async () => listResult)()
         })->McpTestBindings.toUnknown,
         (),
       )
@@ -1109,15 +1090,13 @@ describe("public wrapper coverage", () => {
     let sendOptions = ref([])
     let transport =
       makeTransportFixture(
-        ~start=(() => {
+        ~start=((async () => {
           transportCalls := switch transportCalls.contents { | (startCount, closeCount) => (startCount + 1, closeCount) }
-          Promise.resolve()
-        })->McpTestBindings.toUnknown,
-        ~close=(() => {
+        }))->McpTestBindings.toUnknown,
+        ~close=((async () => {
           transportCalls := switch transportCalls.contents { | (startCount, closeCount) => (startCount, closeCount + 1) }
-          Promise.resolve()
-        })->McpTestBindings.toUnknown,
-        ~send=((payload: unknown, options: option<McpTransportSendOptions.t>) => {
+        }))->McpTestBindings.toUnknown,
+        ~send=((async (payload: unknown, options: option<McpTransportSendOptions.t>) => {
           sendKinds := [
             payload
             ->McpTestBindings.toDict
@@ -1127,8 +1106,7 @@ describe("public wrapper coverage", () => {
             ...sendKinds.contents,
           ]
           sendOptions := [options->encodePresence, ...sendOptions.contents]
-          Promise.resolve()
-        })->McpTestBindings.toUnknown,
+        }))->McpTestBindings.toUnknown,
         ~sessionId="transport-session",
         (),
       )
@@ -1242,15 +1220,15 @@ describe("public wrapper coverage", () => {
           clientStream
         })->McpTestBindings.toUnknown,
         ~getTask=((_taskId: string, _options: option<McpRequestOptions.t>) =>
-          Promise.resolve(McpGetTaskResult.ofTask(workingTask)))->McpTestBindings.toUnknown,
+          (async () => McpGetTaskResult.ofTask(workingTask))())->McpTestBindings.toUnknown,
         ~getTaskResult=((_taskId: string, _options: option<McpRequestOptions.t>) =>
-          Promise.resolve("client-raw"->McpTestBindings.stringToUnknown))->McpTestBindings.toUnknown,
+          (async () => "client-raw"->McpTestBindings.stringToUnknown)())->McpTestBindings.toUnknown,
         ~listTasks=((cursor: option<string>, _options: option<McpRequestOptions.t>) => {
           clientListCursors := [cursor->encodeCursor, ...clientListCursors.contents]
-          Promise.resolve(listResult)
+          (async () => listResult)()
         })->McpTestBindings.toUnknown,
         ~cancelTask=((_taskId: string, _options: option<McpRequestOptions.t>) =>
-          Promise.resolve(McpCancelTaskResult.ofTask(cancelledTask)))->McpTestBindings.toUnknown,
+          (async () => McpCancelTaskResult.ofTask(cancelledTask))())->McpTestBindings.toUnknown,
         (),
       )
 
@@ -1275,15 +1253,15 @@ describe("public wrapper coverage", () => {
           serverStream
         })->McpTestBindings.toUnknown,
         ~getTask=((_taskId: string, _options: option<McpRequestOptions.t>) =>
-          Promise.resolve(McpGetTaskResult.ofTask(workingTask)))->McpTestBindings.toUnknown,
+          (async () => McpGetTaskResult.ofTask(workingTask))())->McpTestBindings.toUnknown,
         ~getTaskResult=((_taskId: string, _options: option<McpRequestOptions.t>) =>
-          Promise.resolve("server-raw"->McpTestBindings.stringToUnknown))->McpTestBindings.toUnknown,
+          (async () => "server-raw"->McpTestBindings.stringToUnknown)())->McpTestBindings.toUnknown,
         ~listTasks=((cursor: option<string>, _options: option<McpRequestOptions.t>) => {
           serverListCursors := [cursor->encodeCursor, ...serverListCursors.contents]
-          Promise.resolve(listResult)
+          (async () => listResult)()
         })->McpTestBindings.toUnknown,
         ~cancelTask=((_taskId: string, _options: option<McpRequestOptions.t>) =>
-          Promise.resolve(McpCancelTaskResult.ofTask(cancelledTask)))->McpTestBindings.toUnknown,
+          (async () => McpCancelTaskResult.ofTask(cancelledTask))())->McpTestBindings.toUnknown,
         (),
       )
 

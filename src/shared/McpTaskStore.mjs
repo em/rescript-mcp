@@ -44,12 +44,14 @@ function storeTaskResultRawWithSessionId(store, taskId, status, result, sessionI
   return store.storeTaskResult(taskId, McpTaskResultStatus.toString(status), result, sessionId);
 }
 
-function getTaskResult(store, taskId, outputSchema) {
-  return store.getTaskResult(taskId).then(result => Promise.resolve(McpCallToolResultInternal.fromRaw(result, outputSchema)));
+async function getTaskResult(store, taskId, outputSchema) {
+  let result = await store.getTaskResult(taskId);
+  return McpCallToolResultInternal.fromRaw(result, outputSchema);
 }
 
-function getTaskResultWithSessionId(store, taskId, outputSchema, sessionId) {
-  return store.getTaskResult(taskId, sessionId).then(result => Promise.resolve(McpCallToolResultInternal.fromRaw(result, outputSchema)));
+async function getTaskResultWithSessionId(store, taskId, outputSchema, sessionId) {
+  let result = await store.getTaskResult(taskId, sessionId);
+  return McpCallToolResultInternal.fromRaw(result, outputSchema);
 }
 
 function updateTaskStatus(store, taskId, status, statusMessage, param) {

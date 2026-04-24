@@ -35,10 +35,10 @@ external getTaskResultRaw: (t, string) => promise<unknown> = "getTaskResult"
 @send
 external getTaskResultTypedInternal: (t, string) => promise<McpCallToolResult.raw> = "getTaskResult"
 
-let getTaskResult = (store, taskId, outputSchema) =>
-  store
-  ->getTaskResultTypedInternal(taskId)
-  ->Promise.then(result => Promise.resolve(result->McpCallToolResultInternal.fromRaw(outputSchema)))
+let getTaskResult = async (store, taskId, outputSchema) => {
+  let result = await store->getTaskResultTypedInternal(taskId)
+  result->McpCallToolResultInternal.fromRaw(outputSchema)
+}
 
 @send
 external updateTaskStatusRaw: (t, string, string) => promise<unit> = "updateTaskStatus"

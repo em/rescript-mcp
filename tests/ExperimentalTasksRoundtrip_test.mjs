@@ -6,6 +6,7 @@ import * as McpClient from "../src/client/McpClient.mjs";
 import * as McpServer from "../src/server/McpServer.mjs";
 import * as Belt_Array from "@rescript/runtime/lib/es6/Belt_Array.js";
 import * as McpTaskTool from "../src/server/McpTaskTool.mjs";
+import * as TestSupport from "./TestSupport.mjs";
 import * as McpTaskStore from "../src/shared/McpTaskStore.mjs";
 import * as Stdlib_Option from "@rescript/runtime/lib/es6/Stdlib_Option.js";
 import * as McpTaskContext from "../src/shared/McpTaskContext.mjs";
@@ -131,7 +132,7 @@ Vitest.describe("experimental task roundtrip", undefined, undefined, undefined, 
     let taskContext = McpTestBindings.getSome(McpServerContext.task(ctx));
     let taskId = McpTestBindings.getSome(McpTaskContext.id(taskContext));
     return McpGetTaskResult.ofTask(await McpRequestTaskStore.getTask(McpTaskContext.store(taskContext), taskId));
-  }, _ctx => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text("unreachable")], undefined, undefined, undefined)), undefined));
+  }, async _ctx => McpCallToolResult.makeRaw([McpContentBlock.text("unreachable")], undefined, undefined, undefined), undefined));
   await McpServer.connect(server, serverTransport);
   await McpClient.connectWithOptions(client, clientTransport, timeoutOptions);
   await McpClient.listTools(client);
@@ -158,7 +159,7 @@ Vitest.describe("experimental task roundtrip", undefined, undefined, undefined, 
       "name",
       "stall-task"
     ]]), taskRequestOptions));
-  await Promise.resolve();
+  await TestSupport.nextMicrotask();
   let stalledTaskId = McpTestBindings.getSome(Belt_Array.keepMap(McpListTasksResult.tasks(await McpClientExperimentalTasks.listTasksWithOptions(McpClient.experimentalTasks(client), timeoutOptions)), task => {
       if (McpTask.status(task) === "working" && McpTask.taskId(task) !== taskId) {
         return McpTask.taskId(task);

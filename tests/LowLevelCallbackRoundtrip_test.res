@@ -22,22 +22,20 @@ describe("low-level client callback roundtrip", () => {
     server->McpLowLevelServer.registerCapabilities(serverCapabilities)
     server->McpLowLevelServer.setRequestHandlerRaw(
       #completionComplete,
-      (_request, _extra) =>
-        Promise.resolve(
-          Dict.fromArray([
-            (
-              "completion",
-              Dict.fromArray([
-                (
-                  "values",
-                  ["alpha", "beta"]->Array.map(McpTestBindings.stringToUnknown)->McpTestBindings.arrayToUnknown,
-                ),
-              ])
-              ->McpTestBindings.dictToUnknown,
-            ),
-          ])
-          ->McpTestBindings.dictToUnknown,
-        ),
+      async (_request, _extra) =>
+        Dict.fromArray([
+          (
+            "completion",
+            Dict.fromArray([
+              (
+                "values",
+                ["alpha", "beta"]->Array.map(McpTestBindings.stringToUnknown)->McpTestBindings.arrayToUnknown,
+              ),
+            ])
+            ->McpTestBindings.dictToUnknown,
+          ),
+        ])
+        ->McpTestBindings.dictToUnknown,
     )
 
     let client = McpTestBindings.makeClient("callback-client", "1.0.0")
@@ -55,68 +53,60 @@ describe("low-level client callback roundtrip", () => {
 
     client->McpTestBindings.setClientRequestHandlerRaw(
       #samplingCreateMessage,
-      (_request, _ctx) =>
-        Promise.resolve(
-          McpCreateMessageResult.make(
-            ~model="test-model",
-            ~role=#assistant,
-            ~content=McpSamplingContent.text("sampled text"),
-            (),
-          )
-          ->McpTestBindings.toUnknown,
-        ),
+      async (_request, _ctx) =>
+        McpCreateMessageResult.make(
+          ~model="test-model",
+          ~role=#assistant,
+          ~content=McpSamplingContent.text("sampled text"),
+          (),
+        )
+        ->McpTestBindings.toUnknown,
     )
 
     client->McpTestBindings.setClientRequestHandlerRaw(
       #elicitationCreate,
-      (_request, _ctx) =>
-        Promise.resolve(
-          McpElicitResult.make(
-            ~action=#accept,
-            ~content=Dict.fromArray([("code", "1234"->McpTestBindings.stringToUnknown)]),
-            (),
-          )
-          ->McpTestBindings.toUnknown,
-        ),
+      async (_request, _ctx) =>
+        McpElicitResult.make(
+          ~action=#accept,
+          ~content=Dict.fromArray([("code", "1234"->McpTestBindings.stringToUnknown)]),
+          (),
+        )
+        ->McpTestBindings.toUnknown,
     )
 
     client->McpTestBindings.setClientRequestHandlerRaw(
       #rootsList,
-      (_request, _ctx) =>
-        Promise.resolve(
-          Dict.fromArray([
-            (
-              "roots",
-              [Dict.fromArray([
-                 ("uri", "file:///workspace"->McpTestBindings.stringToUnknown),
-                 ("name", "workspace"->McpTestBindings.stringToUnknown),
-               ])->McpTestBindings.dictToUnknown]
-              ->McpTestBindings.arrayToUnknown,
-            ),
-          ])
-          ->McpTestBindings.dictToUnknown,
-        ),
+      async (_request, _ctx) =>
+        Dict.fromArray([
+          (
+            "roots",
+            [Dict.fromArray([
+               ("uri", "file:///workspace"->McpTestBindings.stringToUnknown),
+               ("name", "workspace"->McpTestBindings.stringToUnknown),
+             ])->McpTestBindings.dictToUnknown]
+            ->McpTestBindings.arrayToUnknown,
+          ),
+        ])
+        ->McpTestBindings.dictToUnknown,
     )
     let loggingNotifications = ref([])
     let updatedResources = ref([])
     client->McpClient.setNotificationHandlerRaw(
       #message,
-      notification => {
+      async notification => {
         loggingNotifications := [
           ...loggingNotifications.contents,
           `${notification->notificationStringField("level")->Option.getOr("missing-level")}:${notification->notificationStringField("data")->Option.getOr("missing-data")}`,
         ]
-        Promise.resolve()
       },
     )
     client->McpClient.setNotificationHandlerRaw(
       #resourcesUpdated,
-      notification => {
+      async notification => {
         updatedResources := [
           ...updatedResources.contents,
           notification->notificationStringField("uri")->Option.getOr("missing-uri"),
         ]
-        Promise.resolve()
       },
     )
 
@@ -202,8 +192,8 @@ describe("low-level client callback roundtrip", () => {
     ))
 
     await TestSupport.settle([
-      Promise.resolve(client->McpClient.removeNotificationHandlerRaw(#message)),
-      Promise.resolve(client->McpClient.removeNotificationHandlerRaw(#resourcesUpdated)),
+      (async () => client->McpClient.removeNotificationHandlerRaw(#message))(),
+      (async () => client->McpClient.removeNotificationHandlerRaw(#resourcesUpdated))(),
       client->McpTestBindings.closeClient->TestSupport.closeIgnore,
       server->McpTestBindings.closeLowLevelServer->TestSupport.closeIgnore,
       serverTransport->McpTestBindings.transportClose->TestSupport.closeIgnore,

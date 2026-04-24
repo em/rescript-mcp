@@ -179,10 +179,10 @@ external callToolWithResultSchemaRaw: (
 @send
 external callToolRaw: (t, McpCallToolParams.t) => promise<McpCallToolResult.raw> = "callTool"
 
-let callTool = (client, params, outputSchema) =>
-  client
-  ->callToolWithResultSchemaRaw(params, outputSchema)
-  ->Promise.then(result => Promise.resolve(result->McpCallToolResultInternal.fromRaw(outputSchema)))
+let callTool = async (client, params, outputSchema) => {
+  let result = await client->callToolWithResultSchemaRaw(params, outputSchema)
+  result->McpCallToolResultInternal.fromRaw(outputSchema)
+}
 
 @send
 external callToolRawWithOptions: (t, McpCallToolParams.t, McpRequestOptions.t) => promise<
@@ -198,10 +198,10 @@ external callToolWithResultSchemaRawAndOptions: (
   McpRequestOptions.t,
 ) => promise<McpCallToolResult.raw> = "callTool"
 
-let callToolWithOptions = (client, params, outputSchema, options) =>
-  client
-  ->callToolWithResultSchemaRawAndOptions(params, outputSchema, options)
-  ->Promise.then(result => Promise.resolve(result->McpCallToolResultInternal.fromRaw(outputSchema)))
+let callToolWithOptions = async (client, params, outputSchema, options) => {
+  let result = await client->callToolWithResultSchemaRawAndOptions(params, outputSchema, options)
+  result->McpCallToolResultInternal.fromRaw(outputSchema)
+}
 
 @send
 external listTools: t => promise<McpListToolsResult.t> = "listTools"

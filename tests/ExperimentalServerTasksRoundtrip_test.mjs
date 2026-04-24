@@ -165,7 +165,7 @@ Vitest.describe("experimental server task roundtrip", undefined, undefined, unde
   let elicitationMessages = await McpResponseStream.toArray(McpLowLevelServerExperimentalTasks.elicitInputStreamRawWithOptions(McpLowLevelServer.experimentalTasks(server), McpTestBindings.makeCodeElicitationRequestParams("Provide a code"), taskOptions));
   let elicitationResult = McpTestBindings.getSome(Belt_Array.keepMap(elicitationMessages, McpResponseStream.result)[0]);
   let stalledMessagesPromise = McpResponseStream.toArray(McpLowLevelServerExperimentalTasks.createMessageStreamRawWithOptions(McpLowLevelServer.experimentalTasks(server), McpTestBindings.makeSamplingRequestParams("stall", 16), taskOptions));
-  await Promise.resolve();
+  await TestSupport.nextMicrotask();
   let listedTasks = await McpLowLevelServerExperimentalTasks.listTasksWithOptions(McpLowLevelServer.experimentalTasks(server), timeoutOptions);
   let stalledTaskId = McpTestBindings.getSome(Belt_Array.keepMap(McpListTasksResult.tasks(listedTasks), task => {
       if (McpTask.status(task) === "working") {

@@ -70,52 +70,45 @@ describe("authoring lifecycle roundtrip", () => {
 
     client->McpTestBindings.setClientRequestHandlerRaw(
       #samplingCreateMessage,
-      (_request, _ctx) =>
-        Promise.resolve(
-          McpCreateMessageResult.make(
-            ~model="sample-model",
-            ~role=#assistant,
-            ~content=McpSamplingContent.text("sampled-from-client"),
-            (),
-          )
-          ->McpTestBindings.toUnknown,
-        ),
+      async (_request, _ctx) =>
+        McpCreateMessageResult.make(
+          ~model="sample-model",
+          ~role=#assistant,
+          ~content=McpSamplingContent.text("sampled-from-client"),
+          (),
+        )
+        ->McpTestBindings.toUnknown,
     )
     client->McpTestBindings.setClientRequestHandlerRaw(
       #elicitationCreate,
-      (_request, _ctx) =>
-        Promise.resolve(
-          McpElicitResult.make(
-            ~action=#accept,
-            ~content=Dict.fromArray([("code", "42"->McpTestBindings.stringToUnknown)]),
-            (),
-          )
-          ->McpTestBindings.toUnknown,
-        ),
+      async (_request, _ctx) =>
+        McpElicitResult.make(
+          ~action=#accept,
+          ~content=Dict.fromArray([("code", "42"->McpTestBindings.stringToUnknown)]),
+          (),
+        )
+        ->McpTestBindings.toUnknown,
     )
     client->McpTestBindings.setClientRequestHandlerRaw(
       #rootsList,
-      (_request, _ctx) =>
-        Promise.resolve(
-          Dict.fromArray([
-            (
-              "roots",
-              [Dict.fromArray([("uri", "file:///workspace"->McpTestBindings.stringToUnknown)])
-               ->McpTestBindings.dictToUnknown]
-              ->McpTestBindings.arrayToUnknown,
-            ),
-          ])
-          ->McpTestBindings.dictToUnknown,
-        ),
+      async (_request, _ctx) =>
+        Dict.fromArray([
+          (
+            "roots",
+            [Dict.fromArray([("uri", "file:///workspace"->McpTestBindings.stringToUnknown)])
+             ->McpTestBindings.dictToUnknown]
+            ->McpTestBindings.arrayToUnknown,
+          ),
+        ])
+        ->McpTestBindings.dictToUnknown,
     )
     client->McpClient.setNotificationHandlerRaw(
       #message,
-      notification => {
+      async notification => {
         loggingNotifications := [
           ...loggingNotifications.contents,
           `${notification->notificationStringField("level")->Option.getOr("missing-level")}:${notification->notificationStringField("data")->Option.getOr("missing-data")}`,
         ]
-        Promise.resolve()
       },
     )
 
@@ -198,35 +191,29 @@ describe("authoring lifecycle roundtrip", () => {
       server->McpServer.registerToolRaw0(
         "ping",
         McpTool.makeRawConfig(~title="Ping", ()),
-        _ctx =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(~content=[McpContentBlock.text("pong")], ()),
-          ),
+        async _ctx =>
+          McpCallToolResult.makeRaw(~content=[McpContentBlock.text("pong")], ()),
       )
 
     let promptHandle =
       server->McpServer.registerPrompt(
         "review",
         McpPrompt.makeConfig(~title="Review", ~argsSchema=promptSchema, ()),
-        (args, _ctx) =>
-          Promise.resolve(
-            McpGetPromptResult.make(
-              ~messages=[McpPromptMessage.text(~role=#user, ~text="Review " ++ args.topic)],
-              ~description="Review prompt",
-              (),
-            ),
+        async (args, _ctx) =>
+          McpGetPromptResult.make(
+            ~messages=[McpPromptMessage.text(~role=#user, ~text="Review " ++ args.topic)],
+            ~description="Review prompt",
+            (),
           ),
       )
     let welcomeHandle =
       server->McpServer.registerPrompt0(
         "welcome",
         McpPrompt.makeConfig(~title="Welcome", ()),
-        _ctx =>
-          Promise.resolve(
-            McpGetPromptResult.make(
-              ~messages=[McpPromptMessage.text(~role=#assistant, ~text="Welcome")],
-              (),
-            ),
+        async _ctx =>
+          McpGetPromptResult.make(
+            ~messages=[McpPromptMessage.text(~role=#assistant, ~text="Welcome")],
+            (),
           ),
       )
 
@@ -235,12 +222,10 @@ describe("authoring lifecycle roundtrip", () => {
         "config",
         "config://app",
         McpResource.makeConfig(~title="Config", ~mimeType="application/json", ()),
-        (uri, _ctx) =>
-          Promise.resolve(
-            McpReadResourceResult.make([
-              McpResourceContents.text(~uri=Webapi.Url.href(uri), ~text="{\"ok\":true}", ()),
-            ]),
-          ),
+        async (uri, _ctx) =>
+          McpReadResourceResult.make([
+            McpResourceContents.text(~uri=Webapi.Url.href(uri), ~text="{\"ok\":true}", ()),
+          ]),
       )
 
     let resourceTemplate =
@@ -251,7 +236,7 @@ describe("authoring lifecycle roundtrip", () => {
           ~complete=Dict.fromArray([
             (
               "id",
-              (_value, _context) => Promise.resolve(["alpha", "beta"]),
+              async (_value, _context) => ["alpha", "beta"],
             ),
           ]),
           (),
@@ -262,17 +247,14 @@ describe("authoring lifecycle roundtrip", () => {
         "memo",
         resourceTemplate,
         McpResource.makeConfig(~title="Memo", ~mimeType="text/plain", ()),
-        (uri, variables, _ctx) => {
-          Promise.resolve(
-            McpReadResourceResult.make([
-              McpResourceContents.text(
-                ~uri=Webapi.Url.href(uri),
-                ~text=variables->variableId,
-                (),
-              ),
-            ]),
-          )
-        },
+        async (uri, variables, _ctx) =>
+          McpReadResourceResult.make([
+            McpResourceContents.text(
+              ~uri=Webapi.Url.href(uri),
+              ~text=variables->variableId,
+              (),
+            ),
+          ]),
       )
 
     await server->McpServer.connect(serverTransport)
@@ -353,18 +335,16 @@ describe("authoring lifecycle roundtrip", () => {
       McpTool.makeUpdates(
         ~title="Echo v2",
         ~outputSchema=echoOutputStandardSchema,
-        ~callback=(args, _ctx) =>
-          Promise.resolve(
-            McpCallToolResult.make(
-              ~content=[McpContentBlock.text("updated:" ++ args.message)],
-              ~structuredContent={
-                sampled: args.message,
-                code: "updated",
-                root: "updated",
-                httpRequestMissing: "true",
-              },
-              (),
-            ),
+        ~callback=async (args, _ctx) =>
+          McpCallToolResult.make(
+            ~content=[McpContentBlock.text("updated:" ++ args.message)],
+            ~structuredContent={
+              sampled: args.message,
+              code: "updated",
+              root: "updated",
+              httpRequestMissing: "true",
+            },
+            (),
           ),
         (),
       ),
@@ -372,23 +352,19 @@ describe("authoring lifecycle roundtrip", () => {
     pingHandle->McpTool.updateRaw0(
       McpTool.makeRawUpdates0(
         ~title="Ping v2",
-        ~callback=_ctx =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(~content=[McpContentBlock.text("pong-v2")], ()),
-          ),
+        ~callback=async _ctx =>
+          McpCallToolResult.makeRaw(~content=[McpContentBlock.text("pong-v2")], ()),
         (),
       ),
     )
     promptHandle->McpPrompt.update(
       McpPrompt.makeUpdates(
         ~title="Review v2",
-        ~callback=(args, _ctx) =>
-          Promise.resolve(
-            McpGetPromptResult.make(
-              ~messages=[McpPromptMessage.text(~role=#assistant, ~text="Updated " ++ args.topic)],
-              ~description="Updated prompt",
-              (),
-            ),
+        ~callback=async (args, _ctx) =>
+          McpGetPromptResult.make(
+            ~messages=[McpPromptMessage.text(~role=#assistant, ~text="Updated " ++ args.topic)],
+            ~description="Updated prompt",
+            (),
           ),
         (),
       ),
@@ -396,12 +372,10 @@ describe("authoring lifecycle roundtrip", () => {
     welcomeHandle->McpPrompt.update0(
       McpPrompt.makeUpdates0(
         ~title="Welcome v2",
-        ~callback=_ctx =>
-          Promise.resolve(
-            McpGetPromptResult.make(
-              ~messages=[McpPromptMessage.text(~role=#assistant, ~text="Welcome v2")],
-              (),
-            ),
+        ~callback=async _ctx =>
+          McpGetPromptResult.make(
+            ~messages=[McpPromptMessage.text(~role=#assistant, ~text="Welcome v2")],
+            (),
           ),
         (),
       ),
@@ -410,12 +384,10 @@ describe("authoring lifecycle roundtrip", () => {
       McpResource.makeUpdates(
         ~name="settings",
         ~uri="config://settings",
-        ~callback=(uri, _ctx) =>
-          Promise.resolve(
-            McpReadResourceResult.make([
-              McpResourceContents.text(~uri=Webapi.Url.href(uri), ~text="{\"version\":2}", ()),
-            ]),
-          ),
+        ~callback=async (uri, _ctx) =>
+          McpReadResourceResult.make([
+            McpResourceContents.text(~uri=Webapi.Url.href(uri), ~text="{\"version\":2}", ()),
+          ]),
         (),
       ),
     )
@@ -428,16 +400,14 @@ describe("authoring lifecycle roundtrip", () => {
       McpResourceTemplate.makeUpdates(
         ~name="memo-v2",
         ~template=updatedTemplate,
-        ~callback=(uri, variables, _ctx) =>
-          Promise.resolve(
-            McpReadResourceResult.make([
-              McpResourceContents.text(
-                ~uri=Webapi.Url.href(uri),
-                ~text=("updated:" ++ variables->variableId),
-                (),
-              ),
-            ]),
-          ),
+        ~callback=async (uri, variables, _ctx) =>
+          McpReadResourceResult.make([
+            McpResourceContents.text(
+              ~uri=Webapi.Url.href(uri),
+              ~text=("updated:" ++ variables->variableId),
+              (),
+            ),
+          ]),
         (),
       ),
     )
@@ -549,7 +519,7 @@ describe("authoring lifecycle roundtrip", () => {
     ->Expect.toEqual(["updated:alpha"])
 
     await TestSupport.settle([
-      Promise.resolve(client->McpClient.removeNotificationHandlerRaw(#message)),
+      (async () => client->McpClient.removeNotificationHandlerRaw(#message))(),
       client->McpTestBindings.closeClient->TestSupport.closeIgnore,
       server->McpTestBindings.closeMcpServer->TestSupport.closeIgnore,
       serverTransport->McpTestBindings.transportClose->TestSupport.closeIgnore,

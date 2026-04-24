@@ -3,7 +3,6 @@
 import * as Process from "process";
 import * as Nodepath from "node:path";
 import * as Stdlib_Option from "@rescript/runtime/lib/es6/Stdlib_Option.js";
-import * as Stdlib_Promise from "@rescript/runtime/lib/es6/Stdlib_Promise.js";
 import * as Nodechild_process from "node:child_process";
 
 let process = Process;
@@ -46,12 +45,23 @@ function closeHttpServer(server) {
   });
 }
 
-function closeIgnore(promise) {
-  return Stdlib_Promise.$$catch(promise.then(param => Promise.resolve()), param => Promise.resolve());
+async function closeIgnore(promise) {
+  try {
+    await promise;
+    return;
+  } catch (exn) {
+    return;
+  }
 }
 
-function settle(promises) {
-  return Promise.allSettled(promises).then(param => Promise.resolve());
+function nextMicrotask() {
+  return new Promise((resolve, _reject) => {
+    queueMicrotask(() => resolve());
+  });
+}
+
+async function settle(promises) {
+  await Promise.allSettled(promises);
 }
 
 export {
@@ -63,6 +73,7 @@ export {
   listenHttpServer,
   closeHttpServer,
   closeIgnore,
+  nextMicrotask,
   settle,
 }
 /* process Not a pure module */

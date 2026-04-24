@@ -51,7 +51,7 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
     ]
   ]);
   McpLowLevelServer.registerCapabilities(server, serverCapabilities);
-  McpLowLevelServer.setRequestHandlerRaw(server, "completionComplete", (_request, _extra) => Promise.resolve(Object.fromEntries([[
+  McpLowLevelServer.setRequestHandlerRaw(server, "completionComplete", async (_request, _extra) => Object.fromEntries([[
       "completion",
       Object.fromEntries([[
           "values",
@@ -60,7 +60,7 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
             "beta"
           ].map(prim => prim)
         ]])
-    ]])));
+    ]]));
   let client = McpTestBindings.makeClient("callback-client", "1.0.0");
   let clientCapabilities = Object.fromEntries([
     [
@@ -80,12 +80,12 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
     ]
   ]);
   McpTestBindings.registerClientCapabilities(client, clientCapabilities);
-  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", (_request, _ctx) => Promise.resolve(McpCreateMessageResult.make("test-model", "assistant", McpSamplingContent.text("sampled text"), undefined, undefined, undefined)));
-  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", (_request, _ctx) => Promise.resolve(McpElicitResult.make("accept", Object.fromEntries([[
+  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", async (_request, _ctx) => McpCreateMessageResult.make("test-model", "assistant", McpSamplingContent.text("sampled text"), undefined, undefined, undefined));
+  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", async (_request, _ctx) => McpElicitResult.make("accept", Object.fromEntries([[
       "code",
       "1234"
-    ]]), undefined, undefined)));
-  McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", (_request, _ctx) => Promise.resolve(Object.fromEntries([[
+    ]]), undefined, undefined));
+  McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", async (_request, _ctx) => Object.fromEntries([[
       "roots",
       [Object.fromEntries([
           [
@@ -97,26 +97,24 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
             "workspace"
           ]
         ])]
-    ]])));
+    ]]));
   let loggingNotifications = {
     contents: []
   };
   let updatedResources = {
     contents: []
   };
-  McpClient.setNotificationHandlerRaw(client, "message", notification => {
+  McpClient.setNotificationHandlerRaw(client, "message", async notification => {
     loggingNotifications.contents = Belt_Array.concatMany([
       loggingNotifications.contents,
       [Stdlib_Option.getOr(notificationStringField(notification, "level"), "missing-level") + `:` + Stdlib_Option.getOr(notificationStringField(notification, "data"), "missing-data")]
     ]);
-    return Promise.resolve();
   });
-  McpClient.setNotificationHandlerRaw(client, "resourcesUpdated", notification => {
+  McpClient.setNotificationHandlerRaw(client, "resourcesUpdated", async notification => {
     updatedResources.contents = Belt_Array.concatMany([
       updatedResources.contents,
       [Stdlib_Option.getOr(notificationStringField(notification, "uri"), "missing-uri")]
     ]);
-    return Promise.resolve();
   });
   let pair = McpTestBindings.makeLoopbackTransportPair("callback-session");
   let serverTransport = pair.server;
@@ -171,8 +169,8 @@ Vitest.describe("low-level client callback roundtrip", undefined, undefined, und
       ]]
   ]);
   return await TestSupport.settle([
-    Promise.resolve(McpClient.removeNotificationHandlerRaw(client, "message")),
-    Promise.resolve(McpClient.removeNotificationHandlerRaw(client, "resourcesUpdated")),
+    (async () => McpClient.removeNotificationHandlerRaw(client, "message"))(),
+    (async () => McpClient.removeNotificationHandlerRaw(client, "resourcesUpdated"))(),
     TestSupport.closeIgnore(McpTestBindings.closeClient(client)),
     TestSupport.closeIgnore(McpTestBindings.closeLowLevelServer(server)),
     TestSupport.closeIgnore(McpTestBindings.transportClose(serverTransport)),

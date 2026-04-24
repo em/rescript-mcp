@@ -278,20 +278,20 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
     };
     let toolConfig = McpTool.makeConfig("Echo", undefined, undefined, outputSchema, undefined, meta, undefined);
     let rawToolConfig = McpTool.makeRawConfig("Raw Echo", undefined, undefined, undefined, meta, undefined);
-    let typedUpdates = McpTool.makeUpdates("echo", undefined, undefined, undefined, outputSchema, undefined, meta, (value, _ctx) => Promise.resolve(McpCallToolResult.make([McpContentBlock.text(`typed:` + value)], {
+    let typedUpdates = McpTool.makeUpdates("echo", undefined, undefined, undefined, outputSchema, undefined, meta, async (value, _ctx) => McpCallToolResult.make([McpContentBlock.text(`typed:` + value)], {
       message: value
-    }, undefined, undefined)), undefined, undefined);
-    let typedUpdates0 = McpTool.makeUpdates0("echo0", undefined, undefined, outputSchema, undefined, undefined, _ctx => Promise.resolve(McpCallToolResult.make([McpContentBlock.text("typed:zero")], {
+    }, undefined, undefined), undefined, undefined);
+    let typedUpdates0 = McpTool.makeUpdates0("echo0", undefined, undefined, outputSchema, undefined, undefined, async _ctx => McpCallToolResult.make([McpContentBlock.text("typed:zero")], {
       message: "zero"
-    }, undefined, undefined)), undefined, undefined);
-    let rawUpdates = McpTool.makeRawUpdates("raw", undefined, undefined, undefined, undefined, undefined, (value, _ctx) => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text(`raw:` + value)], Object.fromEntries([[
+    }, undefined, undefined), undefined, undefined);
+    let rawUpdates = McpTool.makeRawUpdates("raw", undefined, undefined, undefined, undefined, undefined, async (value, _ctx) => McpCallToolResult.makeRaw([McpContentBlock.text(`raw:` + value)], Object.fromEntries([[
         "message",
         McpJsonValue.string(value)
-      ]]), undefined, undefined)), undefined, undefined);
-    let rawUpdates0 = McpTool.makeRawUpdates0("raw0", undefined, undefined, undefined, undefined, _ctx => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text("raw:zero")], Object.fromEntries([[
+      ]]), undefined, undefined), undefined, undefined);
+    let rawUpdates0 = McpTool.makeRawUpdates0("raw0", undefined, undefined, undefined, undefined, async _ctx => McpCallToolResult.makeRaw([McpContentBlock.text("raw:zero")], Object.fromEntries([[
         "message",
         McpJsonValue.string("zero")
-      ]]), undefined, undefined)), undefined, undefined);
+      ]]), undefined, undefined), undefined, undefined);
     let typedUpdate = McpTestBindings.getSome(Primitive_option.fromNullable(typedUpdates.callback));
     let typedUpdate0 = McpTestBindings.getSome(Primitive_option.fromNullable(typedUpdates0.callback));
     let rawUpdate = McpTestBindings.getSome(Primitive_option.fromNullable(rawUpdates.callback));
@@ -356,20 +356,20 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
     let execution = McpTaskTool.makeExecution("required", undefined);
     let taskToolConfig = McpTaskTool.makeConfig("Task Echo", undefined, undefined, outputSchema, undefined, Primitive_option.some(execution), meta, undefined);
     let rawTaskToolConfig = McpTaskTool.makeRawConfig("Raw Task Echo", undefined, undefined, undefined, Primitive_option.some(execution), meta, undefined);
-    let taskHandler = McpTaskTool.makeHandler((_value, _ctx) => Promise.resolve(McpCreateTaskResult.make(workingTask, undefined)), (_value, _ctx) => Promise.resolve(McpGetTaskResult.ofTask(workingTask)), (value, _ctx) => Promise.resolve(McpCallToolResult.make([McpContentBlock.text(`task:` + value)], {
+    let taskHandler = McpTaskTool.makeHandler(async (_value, _ctx) => McpCreateTaskResult.make(workingTask, undefined), async (_value, _ctx) => McpGetTaskResult.ofTask(workingTask), async (value, _ctx) => McpCallToolResult.make([McpContentBlock.text(`task:` + value)], {
       message: value
-    }, undefined, undefined)), undefined);
-    let rawTaskHandler = McpTaskTool.makeRawHandler((_value, _ctx) => Promise.resolve(McpCreateTaskResult.make(workingTask, undefined)), (_value, _ctx) => Promise.resolve(McpGetTaskResult.ofTask(workingTask)), (value, _ctx) => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text(`raw-task:` + value)], Object.fromEntries([[
+    }, undefined, undefined), undefined);
+    let rawTaskHandler = McpTaskTool.makeRawHandler(async (_value, _ctx) => McpCreateTaskResult.make(workingTask, undefined), async (_value, _ctx) => McpGetTaskResult.ofTask(workingTask), async (value, _ctx) => McpCallToolResult.makeRaw([McpContentBlock.text(`raw-task:` + value)], Object.fromEntries([[
         "message",
         McpJsonValue.string(value)
-      ]]), undefined, undefined)), undefined);
-    let taskHandler0 = McpTaskTool.makeHandler0(_ctx => Promise.resolve(McpCreateTaskResult.make(workingTask, undefined)), _ctx => Promise.resolve(McpGetTaskResult.ofTask(workingTask)), _ctx => Promise.resolve(McpCallToolResult.make([McpContentBlock.text("task:zero")], {
+      ]]), undefined, undefined), undefined);
+    let taskHandler0 = McpTaskTool.makeHandler0(async _ctx => McpCreateTaskResult.make(workingTask, undefined), async _ctx => McpGetTaskResult.ofTask(workingTask), async _ctx => McpCallToolResult.make([McpContentBlock.text("task:zero")], {
       message: "zero-task"
-    }, undefined, undefined)), undefined);
-    let rawTaskHandler0 = McpTaskTool.makeRawHandler0(_ctx => Promise.resolve(McpCreateTaskResult.make(workingTask, undefined)), _ctx => Promise.resolve(McpGetTaskResult.ofTask(workingTask)), _ctx => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text("raw-task:zero")], Object.fromEntries([[
+    }, undefined, undefined), undefined);
+    let rawTaskHandler0 = McpTaskTool.makeRawHandler0(async _ctx => McpCreateTaskResult.make(workingTask, undefined), async _ctx => McpGetTaskResult.ofTask(workingTask), async _ctx => McpCallToolResult.makeRaw([McpContentBlock.text("raw-task:zero")], Object.fromEntries([[
         "message",
         McpJsonValue.string("zero-raw")
-      ]]), undefined, undefined)), undefined);
+      ]]), undefined, undefined), undefined);
     let createTask = taskHandler.createTask;
     let getTask = taskHandler.getTask;
     let getTaskResult = taskHandler.getTaskResult;
@@ -548,7 +548,7 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
             ]],
           createCalls.contents
         ]);
-        return Promise.resolve(createResult);
+        return (async () => createResult)();
       },
       elicitInput: (params, requestOptions) => {
         let mode = Stdlib_Option.getOr(Stdlib_Option.map(params["mode"], prim => prim), "form");
@@ -559,7 +559,13 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
             ]],
           elicitCalls.contents
         ]);
-        return Promise.resolve(mode === "url" ? urlResult : formResult);
+        return (async () => {
+          if (mode === "url") {
+            return urlResult;
+          } else {
+            return formResult;
+          }
+        })();
       }
     };
     let abortController = new AbortController();
@@ -577,7 +583,7 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
               ]],
             createCalls.contents
           ]);
-          return Promise.resolve(createResult);
+          return (async () => createResult)();
         },
         elicitInput: (params, requestOptions) => {
           let mode = Stdlib_Option.getOr(Stdlib_Option.map(params["mode"], prim => prim), "form");
@@ -588,7 +594,13 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
               ]],
             elicitCalls.contents
           ]);
-          return Promise.resolve(mode === "url" ? urlResult : formResult);
+          return (async () => {
+            if (mode === "url") {
+              return urlResult;
+            } else {
+              return formResult;
+            }
+          })();
         }
       }
     };
@@ -771,9 +783,9 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
       contents: []
     };
     let store = {
-      createTask: _params => Promise.resolve(storeTask),
-      getTask: _taskId => Promise.resolve(storeTask),
-      storeTaskResult: (_taskId, status, result) => {
+      createTask: async _params => storeTask,
+      getTask: async _taskId => storeTask,
+      storeTaskResult: async (_taskId, status, result) => {
         storedStatuses.contents = Belt_Array.concatMany([
           [status],
           storedStatuses.contents
@@ -782,19 +794,18 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
           [Stdlib_Option.getOr(rawStructuredMessage(result), "missing")],
           storedMessages.contents
         ]);
-        return Promise.resolve();
       },
-      getTaskResult: _taskId => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text("stored")], Object.fromEntries([[
+      getTaskResult: async _taskId => McpCallToolResult.makeRaw([McpContentBlock.text("stored")], Object.fromEntries([[
           "message",
           McpJsonValue.string("stored")
-        ]]), undefined, undefined)),
-      updateTaskStatus: (_taskId, _status, _statusMessage) => Promise.resolve(),
+        ]]), undefined, undefined),
+      updateTaskStatus: async (_taskId, _status, _statusMessage) => {},
       listTasks: cursor => {
         listCursors.contents = Belt_Array.concatMany([
           [cursor !== undefined ? cursor : "<none>"],
           listCursors.contents
         ]);
-        return Promise.resolve(listResult);
+        return (async () => listResult)();
       }
     };
     let typedResult = await McpRequestTaskStore.getTaskResult(store, "stored-task", outputSchema);
@@ -824,23 +835,21 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
       contents: []
     };
     let transport = {
-      start: () => {
+      start: async () => {
         let match = transportCalls.contents;
         transportCalls.contents = [
           match[0] + 1 | 0,
           match[1]
         ];
-        return Promise.resolve();
       },
-      close: () => {
+      close: async () => {
         let match = transportCalls.contents;
         transportCalls.contents = [
           match[0],
           match[1] + 1 | 0
         ];
-        return Promise.resolve();
       },
-      send: (payload, options) => {
+      send: async (payload, options) => {
         sendKinds.contents = Belt_Array.concatMany([
           [Stdlib_Option.getOr(Stdlib_Option.map(payload["kind"], prim => prim), "missing")],
           sendKinds.contents
@@ -849,7 +858,6 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
           [encodePresence(options)],
           sendOptions.contents
         ]);
-        return Promise.resolve();
       },
       sessionId: "transport-session"
     };
@@ -998,16 +1006,16 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
         ]);
         return clientStream;
       },
-      getTask: (_taskId, _options) => Promise.resolve(McpGetTaskResult.ofTask(workingTask)),
-      getTaskResult: (_taskId, _options) => Promise.resolve("client-raw"),
+      getTask: (_taskId, _options) => (async () => McpGetTaskResult.ofTask(workingTask))(),
+      getTaskResult: (_taskId, _options) => (async () => "client-raw")(),
       listTasks: (cursor, _options) => {
         clientListCursors.contents = Belt_Array.concatMany([
           [cursor !== undefined ? cursor : "<none>"],
           clientListCursors.contents
         ]);
-        return Promise.resolve(listResult);
+        return (async () => listResult)();
       },
-      cancelTask: (_taskId, _options) => Promise.resolve(McpCancelTaskResult.ofTask(cancelledTask))
+      cancelTask: (_taskId, _options) => (async () => McpCancelTaskResult.ofTask(cancelledTask))()
     };
     let serverTasks = {
       requestStream: (request, _options) => {
@@ -1031,16 +1039,16 @@ Vitest.describe("public wrapper coverage", undefined, undefined, undefined, unde
         ]);
         return serverStream;
       },
-      getTask: (_taskId, _options) => Promise.resolve(McpGetTaskResult.ofTask(workingTask)),
-      getTaskResult: (_taskId, _options) => Promise.resolve("server-raw"),
+      getTask: (_taskId, _options) => (async () => McpGetTaskResult.ofTask(workingTask))(),
+      getTaskResult: (_taskId, _options) => (async () => "server-raw")(),
       listTasks: (cursor, _options) => {
         serverListCursors.contents = Belt_Array.concatMany([
           [cursor !== undefined ? cursor : "<none>"],
           serverListCursors.contents
         ]);
-        return Promise.resolve(listResult);
+        return (async () => listResult)();
       },
-      cancelTask: (_taskId, _options) => Promise.resolve(McpCancelTaskResult.ofTask(cancelledTask))
+      cancelTask: (_taskId, _options) => (async () => McpCancelTaskResult.ofTask(cancelledTask))()
     };
     McpClientExperimentalTasks.callToolStreamRaw(clientTasks, Object.fromEntries([[
         "name",

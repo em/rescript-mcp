@@ -120,12 +120,12 @@ Vitest.describe("binding object surface", undefined, undefined, undefined, undef
     McpStdioServerTransport.makeWithStreams(TestSupport.process.stdin, TestSupport.process.stdout);
     let uriTemplate = McpUriTemplate.make("memo://{id}");
     let queryTemplate = McpUriTemplate.make("memo://{id}{?tag}");
-    let resourceTemplate = McpResourceTemplate.makeWithUriTemplate(uriTemplate, McpResourceTemplate.makeCallbacks(_ctx => Promise.resolve(McpListResourcesResult.make([McpListResourcesResult.makeResource("memo://alpha", "memo-alpha", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined)], undefined, undefined, undefined)), Object.fromEntries([[
+    let resourceTemplate = McpResourceTemplate.makeWithUriTemplate(uriTemplate, McpResourceTemplate.makeCallbacks(async _ctx => McpListResourcesResult.make([McpListResourcesResult.makeResource("memo://alpha", "memo-alpha", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined)], undefined, undefined, undefined), Object.fromEntries([[
         "id",
-        (_value, _context) => Promise.resolve([
+        async (_value, _context) => [
           "alpha",
           "beta"
-        ])
+        ]
       ]]), undefined));
     McpStreamableHttpClientTransport.setProtocolVersion(httpClientTransport, McpTypes.latestProtocolVersion);
     McpSSEClientTransport.setProtocolVersion(sseClientTransport, McpTypes.latestProtocolVersion);
@@ -279,12 +279,12 @@ Vitest.describe("binding object surface", undefined, undefined, undefined, undef
       }
     };
     let requestTaskStore = {
-      createTask: _params => Promise.resolve(Stdlib_JsError.throwWithMessage("unused")),
-      getTask: _taskId => Promise.resolve(Stdlib_JsError.throwWithMessage("unused")),
-      storeTaskResult: (_taskId, _status, _result) => Promise.resolve(),
-      getTaskResult: _taskId => Promise.resolve("unused"),
-      updateTaskStatus: (_taskId, _status, _statusMessage) => Promise.resolve(),
-      listTasks: _cursor => Promise.resolve(McpListTasksResult.make([], undefined, undefined))
+      createTask: async _params => Stdlib_JsError.throwWithMessage("unused"),
+      getTask: async _taskId => Stdlib_JsError.throwWithMessage("unused"),
+      storeTaskResult: async (_taskId, _status, _result) => {},
+      getTaskResult: async _taskId => "unused",
+      updateTaskStatus: async (_taskId, _status, _statusMessage) => {},
+      listTasks: async _cursor => McpListTasksResult.make([], undefined, undefined)
     };
     let serverContext = {
       sessionId: "session-1",

@@ -4,7 +4,6 @@ import * as Vitest from "rescript-vitest/src/Vitest.mjs";
 import * as McpTypes from "../src/core/McpTypes.mjs";
 import * as Nodehttp from "node:http";
 import * as TestSupport from "./TestSupport.mjs";
-import * as Stdlib_Promise from "@rescript/runtime/lib/es6/Stdlib_Promise.js";
 import * as McpTestBindings from "./support/McpTestBindings.mjs";
 import * as Primitive_option from "@rescript/runtime/lib/es6/Primitive_option.js";
 
@@ -14,11 +13,15 @@ Vitest.describe("streamable http roundtrip", undefined, undefined, undefined, un
   let client = McpTestBindings.makeClient("http-test-client", "1.0.0");
   await McpTestBindings.connectLowLevelServer(server, transport);
   let httpServer = Nodehttp.createServer((req, res) => {
-    Stdlib_Promise.$$catch(McpTestBindings.nodeHandleRequest(transport, req, res), _error => {
-      res.statusCode = 500;
-      res.end(Buffer.from("transport error"));
-      return Promise.resolve();
-    });
+    (async () => {
+      try {
+        return await McpTestBindings.nodeHandleRequest(transport, req, res);
+      } catch (_error) {
+        res.statusCode = 500;
+        res.end(Buffer.from("transport error"));
+        return;
+      }
+    })();
   });
   let address = await TestSupport.listenHttpServer(httpServer);
   let clientTransport = McpTestBindings.makeStreamableHttpClientTransport(`http://127.0.0.1:` + address.port.toString() + `/mcp`);

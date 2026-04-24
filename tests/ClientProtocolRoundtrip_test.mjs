@@ -47,8 +47,8 @@ function toolMessage(request) {
   return Stdlib_Option.getOr(Stdlib_Option.flatMap(Primitive_option.fromNullable(request.params.arguments), args => Stdlib_Option.map(args["message"], prim => prim)), "missing");
 }
 
-function resolveUnknown(value) {
-  return Promise.resolve(value);
+async function resolveUnknown(value) {
+  return value;
 }
 
 let echoOutputStandardSchema = McpStandardSchema.fromRescriptSchema(echoOutputSchema);
@@ -91,23 +91,23 @@ Vitest.describe("client protocol roundtrip", undefined, undefined, undefined, un
       ]
     ]);
     McpLowLevelServer.registerCapabilities(server, serverCapabilities);
-    McpLowLevelServer.setRequestHandlerRaw(server, "completionComplete", (request, _extra) => Promise.resolve(McpCompleteResult.make(McpCompleteResult.makeCompletion([
+    McpLowLevelServer.setRequestHandlerRaw(server, "completionComplete", (request, _extra) => resolveUnknown(McpCompleteResult.make(McpCompleteResult.makeCompletion([
       request.params.argument.value,
       request.params.argument.name
     ], 2.0, false, undefined), undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "loggingSetLevel", (_request, _extra) => Promise.resolve(McpEmptyResult.make(undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "promptsGet", (request, _extra) => Promise.resolve(McpGetPromptResult.make([McpPromptMessage.text("assistant", `prompt:` + request.params.name + `:` + promptTopic(request))], `prompt:` + request.params.name, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "promptsList", (request, _extra) => Promise.resolve(McpListPromptsResult.make([McpListPromptsResult.makePrompt("review", Stdlib_Option.getOr(Primitive_option.fromNullable(request.params.cursor), "no-cursor"), "Prompt description", [McpListPromptsResult.makePromptArgument("topic", "Prompt topic", true, undefined)], undefined, [McpIcon.make("prompt.svg", undefined, undefined, "light", undefined)], undefined)], "prompts-next", undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesList", (request, _extra) => Promise.resolve(McpListResourcesResult.make([McpListResourcesResult.makeResource("config://typed", "typed-resource", Stdlib_Option.getOr(Primitive_option.fromNullable(request.params.cursor), "no-cursor"), "Resource description", "application/json", 32.0, Primitive_option.some(McpAnnotations.make(["assistant"], 0.75, "2026-04-23T00:00:00Z", undefined)), undefined, [McpIcon.make("resource.svg", undefined, undefined, "dark", undefined)], undefined)], "resources-next", undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesTemplatesList", (request, _extra) => Promise.resolve(McpListResourceTemplatesResult.make([McpListResourceTemplatesResult.makeResourceTemplate("memo://{id}", "memo", Stdlib_Option.getOr(Primitive_option.fromNullable(request.params.cursor), "no-cursor"), "Template description", "text/plain", Primitive_option.some(McpAnnotations.make(["user"], 0.5, "2026-04-23T00:00:00Z", undefined)), undefined, [McpIcon.make("template.svg", undefined, undefined, "light", undefined)], undefined)], "templates-next", undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesRead", (request, _extra) => Promise.resolve(McpReadResourceResult.make([McpResourceContents.text(request.params.uri, `read:` + request.params.uri, undefined, undefined)])));
-    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesSubscribe", (_request, _extra) => Promise.resolve(McpEmptyResult.make(undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesUnsubscribe", (_request, _extra) => Promise.resolve(McpEmptyResult.make(undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "toolsCall", (request, _extra) => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text(`tool:` + request.params.name + `:` + toolMessage(request))], Object.fromEntries([[
+    McpLowLevelServer.setRequestHandlerRaw(server, "loggingSetLevel", (_request, _extra) => resolveUnknown(McpEmptyResult.make(undefined, undefined)));
+    McpLowLevelServer.setRequestHandlerRaw(server, "promptsGet", (request, _extra) => resolveUnknown(McpGetPromptResult.make([McpPromptMessage.text("assistant", `prompt:` + request.params.name + `:` + promptTopic(request))], `prompt:` + request.params.name, undefined)));
+    McpLowLevelServer.setRequestHandlerRaw(server, "promptsList", (request, _extra) => resolveUnknown(McpListPromptsResult.make([McpListPromptsResult.makePrompt("review", Stdlib_Option.getOr(Primitive_option.fromNullable(request.params.cursor), "no-cursor"), "Prompt description", [McpListPromptsResult.makePromptArgument("topic", "Prompt topic", true, undefined)], undefined, [McpIcon.make("prompt.svg", undefined, undefined, "light", undefined)], undefined)], "prompts-next", undefined, undefined)));
+    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesList", (request, _extra) => resolveUnknown(McpListResourcesResult.make([McpListResourcesResult.makeResource("config://typed", "typed-resource", Stdlib_Option.getOr(Primitive_option.fromNullable(request.params.cursor), "no-cursor"), "Resource description", "application/json", 32.0, Primitive_option.some(McpAnnotations.make(["assistant"], 0.75, "2026-04-23T00:00:00Z", undefined)), undefined, [McpIcon.make("resource.svg", undefined, undefined, "dark", undefined)], undefined)], "resources-next", undefined, undefined)));
+    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesTemplatesList", (request, _extra) => resolveUnknown(McpListResourceTemplatesResult.make([McpListResourceTemplatesResult.makeResourceTemplate("memo://{id}", "memo", Stdlib_Option.getOr(Primitive_option.fromNullable(request.params.cursor), "no-cursor"), "Template description", "text/plain", Primitive_option.some(McpAnnotations.make(["user"], 0.5, "2026-04-23T00:00:00Z", undefined)), undefined, [McpIcon.make("template.svg", undefined, undefined, "light", undefined)], undefined)], "templates-next", undefined, undefined)));
+    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesRead", (request, _extra) => resolveUnknown(McpReadResourceResult.make([McpResourceContents.text(request.params.uri, `read:` + request.params.uri, undefined, undefined)])));
+    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesSubscribe", (_request, _extra) => resolveUnknown(McpEmptyResult.make(undefined, undefined)));
+    McpLowLevelServer.setRequestHandlerRaw(server, "resourcesUnsubscribe", (_request, _extra) => resolveUnknown(McpEmptyResult.make(undefined, undefined)));
+    McpLowLevelServer.setRequestHandlerRaw(server, "toolsCall", (request, _extra) => resolveUnknown(McpCallToolResult.makeRaw([McpContentBlock.text(`tool:` + request.params.name + `:` + toolMessage(request))], Object.fromEntries([[
         "echoed",
         McpJsonValue.string(toolMessage(request))
       ]]), undefined, undefined)));
-    McpLowLevelServer.setRequestHandlerRaw(server, "toolsList", (request, _extra) => Promise.resolve(McpListToolsResult.make([McpListToolsResult.makeTool("echo", McpToolSchema.make(Object.fromEntries([[
+    McpLowLevelServer.setRequestHandlerRaw(server, "toolsList", (request, _extra) => resolveUnknown(McpListToolsResult.make([McpListToolsResult.makeTool("echo", McpToolSchema.make(Object.fromEntries([[
           "message",
           McpJsonValue.object(Object.fromEntries([[
               "type",
@@ -125,7 +125,7 @@ Vitest.describe("client protocol roundtrip", undefined, undefined, undefined, un
         "roots",
         Object.fromEntries([])
       ]]));
-    McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", (_request, _ctx) => Promise.resolve(McpListRootsResult.make([McpListRootsResult.makeRoot("file:///workspace", "workspace", undefined, undefined)], undefined, undefined)));
+    McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", (_request, _ctx) => resolveUnknown(McpListRootsResult.make([McpListRootsResult.makeRoot("file:///workspace", "workspace", undefined, undefined)], undefined, undefined)));
     let pair = McpTestBindings.makeLoopbackTransportPair("client-protocol");
     let serverTransport = pair.server;
     let clientTransport = pair.client;
@@ -257,7 +257,7 @@ Vitest.describe("client protocol roundtrip", undefined, undefined, undefined, un
         "tools",
         Object.fromEntries([])
       ]]));
-    McpLowLevelServer.setRequestHandlerRaw(server, "toolsCall", (_request, _extra) => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text("tool:mismatch")], Object.fromEntries([[
+    McpLowLevelServer.setRequestHandlerRaw(server, "toolsCall", (_request, _extra) => resolveUnknown(McpCallToolResult.makeRaw([McpContentBlock.text("tool:mismatch")], Object.fromEntries([[
         "count",
         McpJsonValue.int(1)
       ]]), undefined, undefined)));

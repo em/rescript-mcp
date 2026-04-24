@@ -27,12 +27,14 @@ function getNegotiatedProtocolVersion(client) {
   return Stdlib_Option.map(Primitive_option.fromNullable(client.getNegotiatedProtocolVersion()), McpProtocolVersion.fromString);
 }
 
-function callTool(client, params, outputSchema) {
-  return client.callTool(params, outputSchema).then(result => Promise.resolve(McpCallToolResultInternal.fromRaw(result, outputSchema)));
+async function callTool(client, params, outputSchema) {
+  let result = await client.callTool(params, outputSchema);
+  return McpCallToolResultInternal.fromRaw(result, outputSchema);
 }
 
-function callToolWithOptions(client, params, outputSchema, options) {
-  return client.callTool(params, outputSchema, options).then(result => Promise.resolve(McpCallToolResultInternal.fromRaw(result, outputSchema)));
+async function callToolWithOptions(client, params, outputSchema, options) {
+  let result = await client.callTool(params, outputSchema, options);
+  return McpCallToolResultInternal.fromRaw(result, outputSchema);
 }
 
 function make(prim) {

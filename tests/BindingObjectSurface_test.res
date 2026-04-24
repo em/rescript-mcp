@@ -307,21 +307,19 @@ describe("binding object surface", () => {
     let resourceTemplate = Mcp.Server.ResourceTemplate.makeWithUriTemplate(
       uriTemplate,
       Mcp.Server.ResourceTemplate.makeCallbacks(
-        ~list=Some(_ctx =>
-          Promise.resolve(
-            Mcp.Protocol.ListResourcesResult.make(
-              ~resources=[Mcp.Protocol.ListResourcesResult.makeResource(
-                ~uri="memo://alpha",
-                ~name="memo-alpha",
-                (),
-              )],
+        ~list=Some(async _ctx =>
+          Mcp.Protocol.ListResourcesResult.make(
+            ~resources=[Mcp.Protocol.ListResourcesResult.makeResource(
+              ~uri="memo://alpha",
+              ~name="memo-alpha",
               (),
-            ),
+            )],
+            (),
           )),
         ~complete=Dict.fromArray([
           (
             "id",
-            (_value, _context) => Promise.resolve(["alpha", "beta"]),
+            async (_value, _context) => ["alpha", "beta"],
           ),
         ]),
         (),
@@ -496,12 +494,12 @@ describe("binding object surface", () => {
     )
     let requestTaskStore =
       makeRequestTaskStoreFixture(
-        ~createTask=(_params => Promise.resolve(JsError.throwWithMessage("unused")))->McpTestBindings.toUnknown,
-        ~getTask=(_taskId => Promise.resolve(JsError.throwWithMessage("unused")))->McpTestBindings.toUnknown,
-        ~storeTaskResult=((_taskId, _status, _result) => Promise.resolve())->McpTestBindings.toUnknown,
-        ~getTaskResult=(_taskId => Promise.resolve("unused"->McpTestBindings.stringToUnknown))->McpTestBindings.toUnknown,
-        ~updateTaskStatus=((_taskId, _status, _statusMessage) => Promise.resolve())->McpTestBindings.toUnknown,
-        ~listTasks=(_cursor => Promise.resolve(McpListTasksResult.make(~tasks=[], ())))->McpTestBindings.toUnknown,
+        ~createTask=(async _params => JsError.throwWithMessage("unused"))->McpTestBindings.toUnknown,
+        ~getTask=(async _taskId => JsError.throwWithMessage("unused"))->McpTestBindings.toUnknown,
+        ~storeTaskResult=((async (_taskId, _status, _result) => ()))->McpTestBindings.toUnknown,
+        ~getTaskResult=(async _taskId => "unused"->McpTestBindings.stringToUnknown)->McpTestBindings.toUnknown,
+        ~updateTaskStatus=((async (_taskId, _status, _statusMessage) => ()))->McpTestBindings.toUnknown,
+        ~listTasks=(async _cursor => McpListTasksResult.make(~tasks=[], ()))->McpTestBindings.toUnknown,
         (),
       )
     let serverContext = makeServerContextFixture(

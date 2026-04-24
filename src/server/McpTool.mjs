@@ -5,7 +5,10 @@ import * as Primitive_option from "@rescript/runtime/lib/es6/Primitive_option.js
 import * as McpCallToolResultInternal from "../protocol/McpCallToolResultInternal.mjs";
 
 function makeUpdates(name, title, description, paramsSchema, outputSchema, annotations, _meta, callback, enabled, param) {
-  let callback$1 = Stdlib_Option.map(callback, callback => ((args, ctx) => callback(args, ctx).then(result => Promise.resolve(McpCallToolResultInternal.toRaw(result, outputSchema)))));
+  let callback$1 = Stdlib_Option.map(callback, callback => (async (args, ctx) => {
+    let result = await callback(args, ctx);
+    return McpCallToolResultInternal.toRaw(result, outputSchema);
+  }));
   let tmp = {
     outputSchema: outputSchema
   };
@@ -37,7 +40,10 @@ function makeUpdates(name, title, description, paramsSchema, outputSchema, annot
 }
 
 function makeUpdates0(name, title, description, outputSchema, annotations, _meta, callback, enabled, param) {
-  let callback$1 = Stdlib_Option.map(callback, callback => (ctx => callback(ctx).then(result => Promise.resolve(McpCallToolResultInternal.toRaw(result, outputSchema)))));
+  let callback$1 = Stdlib_Option.map(callback, callback => (async ctx => {
+    let result = await callback(ctx);
+    return McpCallToolResultInternal.toRaw(result, outputSchema);
+  }));
   let tmp = {
     outputSchema: outputSchema
   };

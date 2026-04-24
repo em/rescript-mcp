@@ -32,7 +32,7 @@ let toolMessage = request =>
   ->Option.flatMap(args => args->Dict.get("message")->Option.map(McpTestBindings.unknownToString))
   ->Option.getOr("missing")
 
-let resolveUnknown = value => Promise.resolve(value->McpTestBindings.toUnknown)
+let resolveUnknown = async value => value->McpTestBindings.toUnknown
 let getOrThrow = Option.getOrThrow
 
 let echoOutputStandardSchema = echoOutputSchema->McpStandardSchema.fromRescriptSchema

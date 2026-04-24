@@ -231,7 +231,7 @@ describe("experimental server task roundtrip", () => {
           taskOptions,
         )
       ->McpResponseStream.toArray
-    await Promise.resolve()
+    await TestSupport.nextMicrotask()
     let listedTasks =
       await server
       ->McpLowLevelServer.experimentalTasks

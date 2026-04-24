@@ -161,10 +161,8 @@ describe("experimental task roundtrip", () => {
           let task = await taskContext->McpTaskContext.store->McpRequestTaskStore.getTask(taskId)
           McpGetTaskResult.ofTask(task)
         },
-        ~getTaskResult=_ctx =>
-          Promise.resolve(
-            McpCallToolResult.makeRaw(~content=[McpContentBlock.text("unreachable")], ()),
-          ),
+        ~getTaskResult=async _ctx =>
+          McpCallToolResult.makeRaw(~content=[McpContentBlock.text("unreachable")], ()),
         (),
       ),
     )
@@ -218,7 +216,7 @@ describe("experimental task roundtrip", () => {
           taskRequestOptions,
         )
       ->McpResponseStream.toArray
-    await Promise.resolve()
+    await TestSupport.nextMicrotask()
     let stalledTaskId =
       (await client->McpClient.experimentalTasks->McpClientExperimentalTasks.listTasksWithOptions(timeoutOptions))
       ->McpListTasksResult.tasks

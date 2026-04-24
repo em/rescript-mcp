@@ -67,8 +67,10 @@ let makeUpdates = (
 ) => {
   let callback =
     callback->Option.map(callback =>
-      ((args, ctx) =>
-        callback(args, ctx)->Promise.then(result => Promise.resolve(result->McpCallToolResultInternal.toRaw(outputSchema))))
+      async (args, ctx) => {
+        let result = await callback(args, ctx)
+        result->McpCallToolResultInternal.toRaw(outputSchema)
+      }
     )
   makeUpdatesRaw(
     ~name?,
@@ -123,8 +125,10 @@ let makeUpdates0 = (
 ) => {
   let callback =
     callback->Option.map(callback =>
-      (ctx =>
-        callback(ctx)->Promise.then(result => Promise.resolve(result->McpCallToolResultInternal.toRaw(outputSchema))))
+      async ctx => {
+        let result = await callback(ctx)
+        result->McpCallToolResultInternal.toRaw(outputSchema)
+      }
     )
   makeUpdates0Raw(
     ~name?,

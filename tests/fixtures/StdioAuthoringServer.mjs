@@ -31,13 +31,13 @@ let promptArgsSchema = S$RescriptSchema.schema(s => ({
 
 let server = McpServer.makeWithOptions(McpImplementation.make("stdio-authoring-server", "1.0.0"), McpServerOptions.make(undefined, "stdio authoring server", undefined, undefined, undefined, undefined, undefined, undefined));
 
-let _tool = McpServer.registerTool(server, "echo", McpTool.makeConfig("Echo", "Echoes the provided message", Primitive_option.some(McpStandardSchema.fromRescriptSchema(echoArgsSchema)), McpStandardSchema.fromRescriptSchema(echoOutputSchema), undefined, undefined, undefined), (args, _ctx) => Promise.resolve(McpCallToolResult.make([McpContentBlock.text("echo:" + args.message)], {
+let _tool = McpServer.registerTool(server, "echo", McpTool.makeConfig("Echo", "Echoes the provided message", Primitive_option.some(McpStandardSchema.fromRescriptSchema(echoArgsSchema)), McpStandardSchema.fromRescriptSchema(echoOutputSchema), undefined, undefined, undefined), async (args, _ctx) => McpCallToolResult.make([McpContentBlock.text("echo:" + args.message)], {
   echoed: args.message
-}, undefined, undefined)));
+}, undefined, undefined));
 
-let _prompt = McpServer.registerPrompt(server, "review", McpPrompt.makeConfig("Review", "Creates a simple review prompt", Primitive_option.some(McpStandardSchema.fromRescriptSchema(promptArgsSchema)), undefined, undefined), (args, _ctx) => Promise.resolve(McpGetPromptResult.make([McpPromptMessage.text("user", "Review " + args.topic)], "Review prompt", undefined)));
+let _prompt = McpServer.registerPrompt(server, "review", McpPrompt.makeConfig("Review", "Creates a simple review prompt", Primitive_option.some(McpStandardSchema.fromRescriptSchema(promptArgsSchema)), undefined, undefined), async (args, _ctx) => McpGetPromptResult.make([McpPromptMessage.text("user", "Review " + args.topic)], "Review prompt", undefined));
 
-let _resource = McpServer.registerResource(server, "config", "config://app", McpResource.makeConfig("Config", "Static test config", "application/json", undefined, undefined, undefined, undefined), (uri, _ctx) => Promise.resolve(McpReadResourceResult.make([McpResourceContents.text(uri.href, "{\"ok\":true}", "application/json", undefined)])));
+let _resource = McpServer.registerResource(server, "config", "config://app", McpResource.makeConfig("Config", "Static test config", "application/json", undefined, undefined, undefined, undefined), async (uri, _ctx) => McpReadResourceResult.make([McpResourceContents.text(uri.href, "{\"ok\":true}", "application/json", undefined)]));
 
 let _transport = McpStdioServerTransport.make();
 

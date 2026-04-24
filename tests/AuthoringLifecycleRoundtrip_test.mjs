@@ -108,24 +108,23 @@ Vitest.describe("authoring lifecycle roundtrip", undefined, undefined, undefined
   let echoSchema = McpStandardSchema.fromRescriptSchema(echoArgsSchema);
   let echoOutputStandardSchema = McpStandardSchema.fromRescriptSchema(echoOutputSchema);
   let promptSchema = McpStandardSchema.fromRescriptSchema(promptArgsSchema);
-  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", (_request, _ctx) => Promise.resolve(McpCreateMessageResult.make("sample-model", "assistant", McpSamplingContent.text("sampled-from-client"), undefined, undefined, undefined)));
-  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", (_request, _ctx) => Promise.resolve(McpElicitResult.make("accept", Object.fromEntries([[
+  McpTestBindings.setClientRequestHandlerRaw(client, "samplingCreateMessage", async (_request, _ctx) => McpCreateMessageResult.make("sample-model", "assistant", McpSamplingContent.text("sampled-from-client"), undefined, undefined, undefined));
+  McpTestBindings.setClientRequestHandlerRaw(client, "elicitationCreate", async (_request, _ctx) => McpElicitResult.make("accept", Object.fromEntries([[
       "code",
       "42"
-    ]]), undefined, undefined)));
-  McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", (_request, _ctx) => Promise.resolve(Object.fromEntries([[
+    ]]), undefined, undefined));
+  McpTestBindings.setClientRequestHandlerRaw(client, "rootsList", async (_request, _ctx) => Object.fromEntries([[
       "roots",
       [Object.fromEntries([[
             "uri",
             "file:///workspace"
           ]])]
-    ]])));
-  McpClient.setNotificationHandlerRaw(client, "message", notification => {
+    ]]));
+  McpClient.setNotificationHandlerRaw(client, "message", async notification => {
     loggingNotifications.contents = Belt_Array.concatMany([
       loggingNotifications.contents,
       [Stdlib_Option.getOr(notificationStringField(notification, "level"), "missing-level") + `:` + Stdlib_Option.getOr(notificationStringField(notification, "data"), "missing-data")]
     ]);
-    return Promise.resolve();
   });
   let toolHandle = McpServer.registerTool(server, "echo", McpTool.makeConfig("Echo", undefined, Primitive_option.some(echoSchema), echoOutputStandardSchema, undefined, undefined, undefined), async (args, ctx) => {
     let sampling = await McpServerContext.requestSamplingWithOptions(ctx, McpCreateMessageParams.make([McpSamplingMessage.text("user", "tool request")], 32, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined), timeoutOptions);
@@ -154,18 +153,18 @@ Vitest.describe("authoring lifecycle roundtrip", undefined, undefined, undefined
       httpRequestMissing: match !== undefined ? "false" : "true"
     }, undefined, undefined);
   });
-  let pingHandle = McpServer.registerToolRaw0(server, "ping", McpTool.makeRawConfig("Ping", undefined, undefined, undefined, undefined, undefined), _ctx => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text("pong")], undefined, undefined, undefined)));
-  let promptHandle = McpServer.registerPrompt(server, "review", McpPrompt.makeConfig("Review", undefined, Primitive_option.some(promptSchema), undefined, undefined), (args, _ctx) => Promise.resolve(McpGetPromptResult.make([McpPromptMessage.text("user", "Review " + args.topic)], "Review prompt", undefined)));
-  let welcomeHandle = McpServer.registerPrompt0(server, "welcome", McpPrompt.makeConfig("Welcome", undefined, undefined, undefined, undefined), _ctx => Promise.resolve(McpGetPromptResult.make([McpPromptMessage.text("assistant", "Welcome")], undefined, undefined)));
-  let resourceHandle = McpServer.registerResource(server, "config", "config://app", McpResource.makeConfig("Config", undefined, "application/json", undefined, undefined, undefined, undefined), (uri, _ctx) => Promise.resolve(McpReadResourceResult.make([McpResourceContents.text(uri.href, "{\"ok\":true}", undefined, undefined)])));
+  let pingHandle = McpServer.registerToolRaw0(server, "ping", McpTool.makeRawConfig("Ping", undefined, undefined, undefined, undefined, undefined), async _ctx => McpCallToolResult.makeRaw([McpContentBlock.text("pong")], undefined, undefined, undefined));
+  let promptHandle = McpServer.registerPrompt(server, "review", McpPrompt.makeConfig("Review", undefined, Primitive_option.some(promptSchema), undefined, undefined), async (args, _ctx) => McpGetPromptResult.make([McpPromptMessage.text("user", "Review " + args.topic)], "Review prompt", undefined));
+  let welcomeHandle = McpServer.registerPrompt0(server, "welcome", McpPrompt.makeConfig("Welcome", undefined, undefined, undefined, undefined), async _ctx => McpGetPromptResult.make([McpPromptMessage.text("assistant", "Welcome")], undefined, undefined));
+  let resourceHandle = McpServer.registerResource(server, "config", "config://app", McpResource.makeConfig("Config", undefined, "application/json", undefined, undefined, undefined, undefined), async (uri, _ctx) => McpReadResourceResult.make([McpResourceContents.text(uri.href, "{\"ok\":true}", undefined, undefined)]));
   let resourceTemplate = McpResourceTemplate.make("memo://{id}", McpResourceTemplate.makeCallbacks(undefined, Object.fromEntries([[
       "id",
-      (_value, _context) => Promise.resolve([
+      async (_value, _context) => [
         "alpha",
         "beta"
-      ])
+      ]
     ]]), undefined));
-  let resourceTemplateHandle = McpServer.registerResourceTemplate(server, "memo", resourceTemplate, McpResource.makeConfig("Memo", undefined, "text/plain", undefined, undefined, undefined, undefined), (uri, variables, _ctx) => Promise.resolve(McpReadResourceResult.make([McpResourceContents.text(uri.href, variableId(variables), undefined, undefined)])));
+  let resourceTemplateHandle = McpServer.registerResourceTemplate(server, "memo", resourceTemplate, McpResource.makeConfig("Memo", undefined, "text/plain", undefined, undefined, undefined, undefined), async (uri, variables, _ctx) => McpReadResourceResult.make([McpResourceContents.text(uri.href, variableId(variables), undefined, undefined)]));
   await McpServer.connect(server, serverTransport);
   await McpClient.connectWithOptions(client, clientTransport, timeoutOptions);
   t.expect(McpServer.isConnected(server)).toEqual(true);
@@ -222,18 +221,18 @@ Vitest.describe("authoring lifecycle roundtrip", undefined, undefined, undefined
   ]);
   t.expect(McpTestBindings.toolResultTextsRaw(await McpClient.callToolRaw(client, McpCallToolParams.make("ping", undefined, undefined, undefined, undefined)))).toEqual(["pong"]);
   t.expect(McpTestBindings.promptResultTexts(await McpClient.getPrompt(client, McpGetPromptParams.make("welcome", undefined, undefined, undefined)))).toEqual(["Welcome"]);
-  McpTool.update(toolHandle, McpTool.makeUpdates(undefined, "Echo v2", undefined, undefined, echoOutputStandardSchema, undefined, undefined, (args, _ctx) => Promise.resolve(McpCallToolResult.make([McpContentBlock.text("updated:" + args.message)], {
+  McpTool.update(toolHandle, McpTool.makeUpdates(undefined, "Echo v2", undefined, undefined, echoOutputStandardSchema, undefined, undefined, async (args, _ctx) => McpCallToolResult.make([McpContentBlock.text("updated:" + args.message)], {
     sampled: args.message,
     code: "updated",
     root: "updated",
     httpRequestMissing: "true"
-  }, undefined, undefined)), undefined, undefined));
-  McpTool.updateRaw0(pingHandle, McpTool.makeRawUpdates0(undefined, "Ping v2", undefined, undefined, undefined, _ctx => Promise.resolve(McpCallToolResult.makeRaw([McpContentBlock.text("pong-v2")], undefined, undefined, undefined)), undefined, undefined));
-  McpPrompt.update(promptHandle, McpPrompt.makeUpdates(undefined, "Review v2", undefined, undefined, undefined, (args, _ctx) => Promise.resolve(McpGetPromptResult.make([McpPromptMessage.text("assistant", "Updated " + args.topic)], "Updated prompt", undefined)), undefined, undefined));
-  McpPrompt.update0(welcomeHandle, McpPrompt.makeUpdates0(undefined, "Welcome v2", undefined, undefined, _ctx => Promise.resolve(McpGetPromptResult.make([McpPromptMessage.text("assistant", "Welcome v2")], undefined, undefined)), undefined, undefined));
-  McpResource.update(resourceHandle, McpResource.makeUpdates("settings", undefined, "config://settings", undefined, (uri, _ctx) => Promise.resolve(McpReadResourceResult.make([McpResourceContents.text(uri.href, "{\"version\":2}", undefined, undefined)])), undefined, undefined));
+  }, undefined, undefined), undefined, undefined));
+  McpTool.updateRaw0(pingHandle, McpTool.makeRawUpdates0(undefined, "Ping v2", undefined, undefined, undefined, async _ctx => McpCallToolResult.makeRaw([McpContentBlock.text("pong-v2")], undefined, undefined, undefined), undefined, undefined));
+  McpPrompt.update(promptHandle, McpPrompt.makeUpdates(undefined, "Review v2", undefined, undefined, undefined, async (args, _ctx) => McpGetPromptResult.make([McpPromptMessage.text("assistant", "Updated " + args.topic)], "Updated prompt", undefined), undefined, undefined));
+  McpPrompt.update0(welcomeHandle, McpPrompt.makeUpdates0(undefined, "Welcome v2", undefined, undefined, async _ctx => McpGetPromptResult.make([McpPromptMessage.text("assistant", "Welcome v2")], undefined, undefined), undefined, undefined));
+  McpResource.update(resourceHandle, McpResource.makeUpdates("settings", undefined, "config://settings", undefined, async (uri, _ctx) => McpReadResourceResult.make([McpResourceContents.text(uri.href, "{\"version\":2}", undefined, undefined)]), undefined, undefined));
   let updatedTemplate = McpResourceTemplate.make("memo://{id}/v2", McpResourceTemplate.makeCallbacks(undefined, undefined, undefined));
-  McpResourceTemplate.update(resourceTemplateHandle, McpResourceTemplate.makeUpdates("memo-v2", undefined, Primitive_option.some(updatedTemplate), undefined, (uri, variables, _ctx) => Promise.resolve(McpReadResourceResult.make([McpResourceContents.text(uri.href, "updated:" + variableId(variables), undefined, undefined)])), undefined, undefined));
+  McpResourceTemplate.update(resourceTemplateHandle, McpResourceTemplate.makeUpdates("memo-v2", undefined, Primitive_option.some(updatedTemplate), undefined, async (uri, variables, _ctx) => McpReadResourceResult.make([McpResourceContents.text(uri.href, "updated:" + variableId(variables), undefined, undefined)]), undefined, undefined));
   await McpServer.sendLoggingMessage(server, McpLoggingMessageParams.make("info", "updated", undefined, undefined, undefined));
   await McpServer.sendLoggingMessageWithSessionId(server, McpLoggingMessageParams.make("info", "updated-session", undefined, undefined, undefined), "loopback-session");
   McpServer.sendResourceListChanged(server);
@@ -304,7 +303,7 @@ Vitest.describe("authoring lifecycle roundtrip", undefined, undefined, undefined
   let updatedTemplateResource = await McpClient.readResource(client, McpResourceRequestParams.make("memo://alpha/v2", undefined, undefined));
   t.expect(McpTestBindings.readResourceTexts(updatedTemplateResource)).toEqual(["updated:alpha"]);
   return await TestSupport.settle([
-    Promise.resolve(McpClient.removeNotificationHandlerRaw(client, "message")),
+    (async () => McpClient.removeNotificationHandlerRaw(client, "message"))(),
     TestSupport.closeIgnore(McpTestBindings.closeClient(client)),
     TestSupport.closeIgnore(McpTestBindings.closeMcpServer(server)),
     TestSupport.closeIgnore(McpTestBindings.transportClose(serverTransport)),
